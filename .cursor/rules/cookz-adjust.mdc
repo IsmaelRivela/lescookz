@@ -1,0 +1,12 @@
+---
+description: Ajustes de contenido de Cookz apagados hasta que el usuario los pida
+alwaysApply: true
+---
+
+# Cookz — ajustes de contenido
+
+Los controles de edición (cuántas fotos, arrastrar al sitio, encuadre, 90°, voltear) están apagados.
+
+La selección, los layouts y los recortes están en `figma-web/js/cookz-saved.js`. El flag es `COOKZ_ADJUST` en `figma-web/js/app.js` (ahora `false`).
+
+No los enciendas por tu cuenta. Solo si el usuario dice **activa los ajustes de contenido de cooks**: pon `COOKZ_ADJUST` en `true`.

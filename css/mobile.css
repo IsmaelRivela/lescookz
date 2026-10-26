@@ -1,0 +1,398 @@
+/* Phone and small portrait tablets. Does not apply above 820px. */
+
+@media (max-width: 820px) {
+  .logo {
+    left: 4vw;
+    top: 2.2vh;
+    width: min(42vw, 148px);
+  }
+  .logo-link--cookz {
+    left: 4vw;
+    top: 2.2vh;
+  }
+  .logo-link--cookz .logo {
+    width: min(42vw, 148px);
+  }
+
+  .section-title {
+    top: calc(2.2vh + min(42vw, 148px) * 0.42 + 0.35rem);
+    right: auto;
+    left: 4vw;
+    max-width: 78vw;
+    font-size: clamp(26px, 7.4vw, 40px);
+    text-align: left;
+  }
+
+  .page-peel { display: none; }
+  .back {
+    width: 56px;
+    height: 46px;
+  }
+  .back img { width: 56px; }
+  .back--right { right: 4vw; bottom: 2vh; }
+  .back--left { left: 4vw; bottom: 2vh; }
+
+  /* home */
+  .home__plate {
+    width: 93.6vw;
+    height: calc(93.6vw * 633 / 819);
+  }
+  .home__explore { font-size: clamp(36px, 9vw, 56px); }
+  .home__metal {
+    top: 8vh;
+    left: 4vw;
+    width: 118px;
+    padding: 0.45rem 0.5rem 0.55rem;
+    font-size: 11px;
+  }
+  .home__metal-toggle {
+    display: block;
+    width: 100%;
+    color: var(--red);
+    background: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    text-align: left;
+  }
+  .home__metal:not(.is-open) .home__metal-fields { display: none; }
+  .home__metal.is-open .home__metal-toggle { margin-bottom: 0.55rem; }
+  .home__diary {
+    white-space: normal;
+    text-align: left;
+    line-height: 0.86;
+  }
+  .home__diary .home__diary-word {
+    display: block;
+    width: max-content;
+    max-width: 100%;
+    white-space: nowrap;
+    letter-spacing: -0.045em;
+  }
+  .home__diary .home__diary-word--diary { margin-left: auto; }
+  .home__menu { top: 2.4vh; right: 4vw; }
+  .home__menu button,
+  .home__menu a { font-size: 22px; }
+
+  /* japan 2026 — one card, same drag */
+  .frame[data-screen="japan2026"] .j-window { touch-action: none; }
+  .j-track {
+    gap: 6vw;
+    padding: 0 7vw;
+  }
+  .j-card__stage,
+  .j-card--passed .j-card__stage,
+  .j-card--cookz .j-card__stage,
+  .j-card--konbini .j-card__stage {
+    width: 86vw;
+    height: 58vh;
+  }
+  .j-card--konbini video {
+    width: auto;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+  }
+  .j-card--konbini .j-card__label {
+    font-size: clamp(28px, 8vw, 48px);
+  }
+
+  /* manifest — text, then portrait */
+  .manifest__grid {
+    left: 5vw;
+    top: 18vh;
+    width: 90vw;
+    height: 76vh;
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 1fr) auto;
+    overflow: hidden;
+  }
+  .manifest__portrait {
+    max-height: 26vh;
+    margin-top: 1rem;
+    object-position: center top;
+  }
+  .manifest__tools { gap: 1rem; padding-right: 0; }
+
+  .frame[data-screen="lienzo"] .back {
+    top: 2.2vh;
+    bottom: auto;
+  }
+  .lienzo__name {
+    height: auto;
+    max-height: 3.2em;
+    margin-top: 4px;
+    font-size: 11px;
+    line-height: 1.15;
+  }
+
+  /* cookz — each photo is a full-width plate, then the sheet */
+  .frame[data-screen="cookz"] {
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .cookz-shell {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    min-height: 100%;
+  }
+  .cookz-stage {
+    flex: none;
+    height: auto;
+    min-height: 0;
+  }
+  .cookz-grid {
+    flex: none;
+    height: auto;
+  }
+  .cookz-grid[data-layout="1"],
+  .cookz-grid[data-layout="2"],
+  .cookz-grid[data-layout="3"],
+  .cookz-grid[data-layout="4"] {
+    grid-template-columns: 1fr;
+  }
+  .cookz-grid[data-layout="1"] { grid-template-rows: 78vh; }
+  .cookz-grid[data-layout="2"] { grid-template-rows: 70vh 70vh; }
+  .cookz-grid[data-layout="3"] { grid-template-rows: 70vh 70vh 70vh; }
+  .cookz-grid[data-layout="3"] [data-slot="0"] {
+    grid-column: 1;
+    grid-row: auto;
+  }
+  .cookz-grid[data-layout="4"] { grid-template-rows: repeat(4, 70vh); }
+  .cookz-nav {
+    flex: none;
+    gap: 0.6rem;
+    height: auto;
+    padding: 0.9rem 4vw 2.2rem;
+    border-left: 0;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    overflow: visible;
+  }
+  .cookz-meta { overflow: visible; }
+  .frame[data-screen="cookz"] .detail:not(.is-on) { display: none; }
+  .frame[data-screen="cookz"] .detail__ja { font-size: 16px; }
+  .frame[data-screen="cookz"] .detail__romaji,
+  .frame[data-screen="cookz"] .detail__address,
+  .frame[data-screen="cookz"] .detail__address-ja,
+  .frame[data-screen="cookz"] .order-sheet { font-size: 13px; }
+  .frame[data-screen="cookz"] .cookz-nav__venues {
+    max-height: none;
+    overflow: visible;
+    font-size: 13px;
+    line-height: 1.7;
+    text-align: left;
+    text-justify: auto;
+  }
+  .back--cookz {
+    position: fixed;
+    left: auto;
+    right: 4vw;
+    top: 2.2vh;
+    bottom: auto;
+    z-index: 20;
+  }
+  .back--cookz img { width: 48px; }
+
+  .passed__word { font-size: calc(18px - 2pt); }
+  .passed-lang {
+    top: calc(2.2vh + min(42vw, 148px) * 0.42 + 0.35rem + clamp(26px, 7.4vw, 40px) + 8px);
+    right: auto;
+    left: 4vw;
+    justify-content: flex-start;
+  }
+
+  /* passed along */
+  .frame[data-screen="passed-along"] .vlist {
+    left: 5vw;
+    top: 20vh;
+    width: 90vw;
+    max-height: calc(100vh - 20vh - 4.5rem);
+  }
+  .frame[data-screen="passed-along"] .vlist button {
+    height: 44px;
+    font-size: 22px;
+    line-height: 44px;
+  }
+  .frame[data-screen="passed-along"] .preview,
+  .frame[data-screen="passed-along"] .shot {
+    position: static;
+    left: auto;
+    width: 86vw;
+    max-width: 86vw;
+    max-height: 22vh;
+    margin: 0.5rem auto;
+    transform: none;
+  }
+
+  /* konbini hub */
+  .k-menu { gap: 0.7rem; padding: 0; }
+  .k-menu a { font-size: clamp(28px, 9vw, 40px); }
+
+  /* konbini subviews — links in a row */
+  .frame[data-screen="konbini"] .side-nav__panel {
+    position: absolute;
+    top: 14vh;
+    right: 4vw;
+    left: 4vw;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.85rem;
+    width: auto;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+  .frame[data-screen="konbini"] .side-nav a {
+    position: static;
+    width: auto;
+    height: auto;
+    font-size: 13px;
+    line-height: 1.2;
+    text-align: right;
+    opacity: 1;
+    color: #111;
+  }
+
+  .frame[data-screen="konbini"] #konbini-back {
+    top: 2.2vh;
+    right: 4vw;
+    bottom: auto;
+    left: auto;
+  }
+
+  /* tickets — the receipt scrolls between the header and the sort bar */
+  .frame[data-screen="konbini"] .view[data-kview="tickets-all"] .t-window {
+    right: 0;
+    top: 22vh;
+    bottom: 8vh;
+    touch-action: pan-y;
+  }
+  .frame[data-screen="konbini"] .view[data-kview="tickets-all"] .t-lang {
+    top: 16vh;
+    left: 4vw;
+    right: auto;
+  }
+  .t-track { padding: 2vh 5vw 6vh; }
+  .frame[data-screen="konbini"] .view[data-kview="tickets-all"] .t-sort {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    transform: none;
+    overflow-x: auto;
+    background: #fff;
+    padding-top: 0.6rem;
+    padding-bottom: 0.8rem;
+  }
+  .t-sort__track {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    width: max-content;
+    min-width: 100%;
+    padding-left: 4vw;
+    padding-right: 4vw;
+  }
+
+  /* tracker */
+  .k-stats {
+    left: 50%;
+    top: 58%;
+    font-size: clamp(64px, 22vw, 120px);
+  }
+  .k-keys { display: none; }
+  .k-actions {
+    position: absolute;
+    left: 4vw;
+    right: auto;
+    bottom: 14vh;
+    z-index: 6;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.85rem;
+    pointer-events: auto;
+  }
+  .k-actions button {
+    color: #fff;
+    font-size: 18px;
+    font-weight: 900;
+    letter-spacing: 0.01em;
+    line-height: 1;
+    text-transform: lowercase;
+  }
+  .frame[data-screen="konbini"]:has([data-kview="tracker"].is-on) .side-nav__panel {
+    top: 16vh;
+    right: 3vw;
+    left: auto;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.45rem;
+    max-width: 46vw;
+    padding: 0.35rem 0.1rem 0.35rem 0.7rem;
+  }
+  .frame[data-screen="konbini"]:has([data-kview="tracker"].is-on) .side-nav a {
+    color: #fff;
+    font-size: 13px;
+  }
+
+  /* stats */
+  .stats-label {
+    top: 20vh;
+    font-size: 20px;
+  }
+  .stats-box {
+    top: 26vh;
+    width: 88vw;
+    height: 66vh;
+  }
+
+  /* favos — products sit on the stopped train frame */
+  .k-hero {
+    top: 20vh;
+    height: 38vh;
+  }
+  .k-hero-cap {
+    top: calc(63vh - 80px);
+    width: 88vw;
+  }
+  .k-hero-cap__en { font-size: 15pt; }
+  .k-hero-cap__ja { font-size: 11pt; }
+  .favos-picks {
+    width: 92vw;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    bottom: calc(2vh + 80px);
+  }
+  .favos-picks button {
+    width: auto;
+    height: auto;
+  }
+  .favos-picks .favos-mark {
+    height: 33px;
+  }
+}
+
+@media (max-width: 820px) and (hover: none) {
+  .j-card:active .j-card__label,
+  .j-card:focus .j-card__label {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  .j-card--konbini:active .j-card__label,
+  .j-card--konbini:focus .j-card__label {
+    opacity: 1;
+    transform: translateY(-50%) scale(1);
+  }
+  .j-card--passed:active img,
+  .j-card--passed:focus img { opacity: 1; }
+  .j-card--passed:active .j-card__echo--up,
+  .j-card--passed:focus .j-card__echo--up { transform: translateY(-100%); }
+  .j-card--passed:active .j-card__echo--down,
+  .j-card--passed:focus .j-card__echo--down { transform: translateY(100%); }
+}

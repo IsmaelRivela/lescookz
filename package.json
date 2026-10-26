@@ -1,0 +1,7 @@
+{
+  "name": "lescookz-repo",
+  "private": true,
+  "scripts": {
+    "preview": "npx --yes browser-sync start --server . --files \"index.html, css/**/*.css, js/**/*.js, media/**/*\" --port 5178 --listen 127.0.0.1 --no-open --no-notify --no-ui"
+  }
+}

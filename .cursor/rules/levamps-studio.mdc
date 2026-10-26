@@ -1,0 +1,13 @@
+---
+description: Este workspace es Levamps Studio, no WPP
+alwaysApply: true
+---
+
+# Levamps Studio
+
+Estás en `Desktop/IA`. Oficio creativo: landings, 3D, Blender, tools experienciales.
+
+- Sigue `levamps-ped` si el trabajo toca el ped GTA, IFP o las landings ped/classic.
+- En frontend/UI, lee `design-taste-frontend` y declara un Design Read de una línea.
+- No apliques el oficio de banners WPP (clickTag, IAB, peso de ad).
+- MCP Blender vive en `.cursor/mcp.json` de este estudio, no en global.

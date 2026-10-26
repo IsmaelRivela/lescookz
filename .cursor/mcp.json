@@ -1,0 +1,27 @@
+{
+  "mcpServers": {
+    "blender": {
+      "command": "/bin/bash",
+      "args": [
+        "-lc",
+        "export PATH=\"$HOME/.local/bin:$PATH\"; exec \"$HOME/.local/bin/uvx\" --python 3.11 blender-mcp"
+      ],
+      "env": {
+        "UV_PYTHON_PREFERENCE": "only-managed",
+        "DISABLE_TELEMETRY": "true",
+        "BLENDER_HOST": "127.0.0.1",
+        "BLENDER_PORT": "9877"
+      }
+    },
+    "photoshop": {
+      "command": "npx",
+      "args": ["-y", "@alisaitteke/photoshop-mcp"],
+      "env": {
+        "LOG_LEVEL": "1"
+      }
+    },
+    "figma": {
+      "url": "https://mcp.figma.com/mcp"
+    }
+  }
+}

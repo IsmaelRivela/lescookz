@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cookz</title>
+    <link rel="stylesheet" href="media/font/satoshi.css" />
+    <link rel="stylesheet" href="css/main.css" />
+    <link rel="stylesheet" href="css/mobile.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "./vendor/three/three.module.js",
+          "three/addons/": "./vendor/three/addons/"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="viewport">
+    <div id="sizer">
+    <div id="stage">
+    <section class="frame" data-screen="home">
+      <div class="home__rush" aria-hidden="true"></div>
+      <a href="#/home" data-goto="home"><img class="logo" src="media/ui/logo-mark.svg" alt="cookz" /></a>
+      <div class="home__menu">
+        <button type="button" aria-expanded="false" aria-controls="home-menu-list">menú</button>
+        <nav id="home-menu-list" hidden>
+          <a href="#/japan2026" data-goto="japan2026">japan 2026</a>
+          <a href="#/manifest" data-goto="manifest">manifest</a>
+        </nav>
+      </div>
+      <div class="home__center">
+        <canvas class="home__plate" id="home-plate" aria-label="les cookz"></canvas>
+        <p class="home__explore">explore</p>
+      </div>
+      <aside class="home__metal" aria-label="Acabado del plato">
+        <button type="button" class="home__metal-toggle" aria-expanded="false">plato</button>
+        <div class="home__metal-fields">
+          <label>metal<input type="range" min="0" max="1" step="0.01" value="0.86" data-plate="metal"></label>
+          <label>grano<input type="range" min="0" max="1" step="0.01" value="0.22" data-plate="grano"></label>
+          <label>reflejo<input type="range" min="0" max="2.5" step="0.01" value="1.35" data-plate="reflejo"></label>
+          <label>laca<input type="range" min="0" max="1" step="0.01" value="0.28" data-plate="laca"></label>
+          <label>luz<input type="range" min="0" max="360" step="1" value="42" data-plate="luz"></label>
+          <label>aire<input type="range" min="0.4" max="1.8" step="0.01" value="1.05" data-plate="aire"></label>
+          <label>inclina<input type="range" min="-12" max="42" step="1" value="16" data-plate="inclina"></label>
+        </div>
+      </aside>
+      <p class="home__diary"><span class="home__diary-full">visual gastronomic diary</span><span class="home__diary-word home__diary-word--visual" hidden style="display:none">visual</span><span class="home__diary-word home__diary-word--gastro" hidden style="display:none">gastronomic</span><span class="home__diary-word home__diary-word--diary" hidden style="display:none">diary</span></p>
+    </section>
+
+    <section class="frame" data-screen="lienzo">
+      <a href="#/home" data-goto="home"><img class="logo" src="media/ui/logo-mark.svg" alt="cookz" /></a>
+      <div class="lienzo" id="lienzo">
+        <div class="lienzo__world" id="lienzo-world"></div>
+      </div>
+      <button type="button" class="back back--right is-on" data-goto="japan2026" aria-label="Atrás"><img src="media/ui/back.svg" alt="" /></button>
+    </section>
+
+    <section class="frame" data-screen="japan2026">
+      <a href="#/home" data-goto="home"><img class="logo" src="media/ui/logo-mark.svg" alt="cookz" /></a>
+      <img class="logo logo--mix" src="media/ui/logo-mark.svg" alt="" aria-hidden="true" />
+      <h1 class="section-title">Japan2026</h1>
+      <label class="j-blend" hidden>
+        mezcla
+        <select id="j-logo-blend" aria-label="Modo de mezcla del logo">
+          <option value="normal">normal</option>
+          <option value="multiply">multiply</option>
+          <option value="screen">screen</option>
+          <option value="overlay">overlay</option>
+          <option value="darken">darken</option>
+          <option value="lighten">lighten</option>
+          <option value="color-dodge">color-dodge</option>
+          <option value="color-burn">color-burn</option>
+          <option value="hard-light">hard-light</option>
+          <option value="soft-light">soft-light</option>
+          <option value="difference">difference</option>
+          <option value="exclusion">exclusion</option>
+          <option value="hue">hue</option>
+          <option value="saturation" selected>saturation</option>
+          <option value="color">color</option>
+          <option value="luminosity">luminosity</option>
+        </select>
+      </label>
+      <div class="j-window" id="j-window">
+        <div class="j-track">
+          <a class="j-card j-card--cookz" href="#/cookz" data-goto="cookz">
+            <span class="j-card__stage">
+              <img src="media/ui/cookz.webp" alt="" />
+              <span class="j-card__label">Cookz</span>
+            </span>
+          </a>
+          <a class="j-card j-card--konbini" href="#/konbini" data-goto="konbini">
+            <span class="j-card__stage">
+              <video
+                src="media/video/konbini-sequence.mp4?v=2"
+                muted
+                loop
+                playsinline
+                autoplay
+                preload="none"
+              ></video>
+              <span class="j-card__label"><span>K</span><span>o</span><span>n</span><span>b</span><span>i</span><span>n</span><span>i</span></span>
+            </span>
+          </a>
+          <a class="j-card j-card--passed" href="#/passed-along" data-goto="passed-along">
+            <span class="j-card__stage">
+              <span class="j-card__stack">
+                <img class="j-card__echo j-card__echo--up" src="media/ui/passed-along.svg" alt="" aria-hidden="true" />
+                <img src="media/ui/passed-along.svg" alt="" />
+                <img class="j-card__echo j-card__echo--down" src="media/ui/passed-along.svg" alt="" aria-hidden="true" />
+              </span>
+              <span class="j-card__label">Passed along</span>
+            </span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section class="frame" data-screen="manifest">
+      <a href="#/home" data-goto="home"><img class="logo" src="media/ui/logo-mark.svg" alt="cookz" /></a>
+      <h1 class="section-title">Manifest</h1>
+      <div class="manifest__grid">
+        <div class="manifest__edit">
+          <div id="manifest-copy" class="manifest__copy" contenteditable="true" spellcheck="true" role="textbox" aria-label="Texto del manifest" data-placeholder="Escribe el manifest"><b>¿Por qué LesCookz?</b><p><br></p><p>En el ánimo de encontrarle un porqué a este proyecto he decidido no permitirme escudarme en banalidadades o parábolas mentales vagas, para admitirme a mi mismo que me da vergüenza dar un motivo que se pueda interpretar como grandilocuente o pretencioso.&nbsp;</p><p><br></p><p>Simplemente no es mi intención, lo que espero con esto es transmitir mínimamente cómo me gusta la cocina y cómo es el ser humano cuando está alrededor de ella, porque no soy cocinero, pero me habría encantado serlo y verles desde el otro lado tampoco está tan mal.</p><p><br></p><p>Digo verles desde el otro lado porque durante la estancia en Japón lo que más me atrajo y me facilitó la recopilación de información, las charlas, las fotos o la observación directa de tanto cocineros como clientela fueron las barras abiertas frente a la cocina. Una distribución física que posibilita una relación humana más cercana y menos deshumanizadora que a lo que tiende el sector con tablets y pantallas a través de las que pedir tu comida sin intercambiar una sola palabra con nadie.</p><p><br></p><p>LesCookz nace justamente de lo humano dentro de la cocina y de no tener miedo de hablar con otra persona, entristece sentir que a menudo, y yo soy el primero que lo hace, nuestro compañero de comida es el video de youtube que estas 5 minutos buscando o el capitulo de amazon prime cuando la cocina y la comida son para mi de las acciones más cálidas que tiene el ser humano consigo mismo y con los que le rodean.&nbsp;</p><p><br></p><p>¿Porqué cuando comes con amigos recalcas lo bueno que está tu plato, das de probar y te dejan probar y cuando estás solo no piensas ni la mitad de veces en darle valor a lo que estas comiendo? Aunque sean platos que has comido mil veces en tu casa, has normalizado lo buenos que estan y no te das cuenta de lo que son hasta que dejas de tenerlos.</p><p><br></p><p>Por eso creo que empecé a construir esto, para no olvidarme de darle valor al aspecto humano de cada comida que como, de ser consciente de lo que estoy haciendo y evitar ir en modo automático al menos en algo que realmente amo como es la cocina y todo lo que la rodea.</p><p><br></p><p>Porque la gente que está alrededor de una mesa no es hostil, durante mi estancia en Japón el hecho de estar alrededor de comida realmente ha facilitado la comunicación con la gente aún sin tener un idioma común. Porque si le preguntas a cualquier persona ¿qué te gusta comer?, casi cualquiera, sea tímido o extrovertido, te puede responder al menos una cosa que le llene y a través de esa respuesta ya tienes una nueva conversación con alguien que hace un minuto ni conocías.</p><p><br></p><p>Tengo por último que agradecer a todas las personas con las que me crucé por Japón porque su calidez ha sido realmente un motor para hacer esto, en la libreta les pedía apuntar sus nombres y si podía hacerles un retrato para un photobook, pero realmente mi ánimo ha cambiado, simplemente quiero compartiros la foto sin el nombre, porque realmente merecería la pena que les visitaseis vosotros.</p><p><br></p><p><br></p></div>
+          <div class="manifest__tools">
+            <button type="button" data-fmt="bold">Negrita</button>
+            <button type="button" data-fmt="italic">Cursiva</button>
+            <span id="manifest-saved" hidden>Guardado</span>
+          </div>
+        </div>
+        <img class="manifest__portrait" src="media/ui/manifest-portrait.png" alt="" />
+      </div>
+    </section>
+
+    <section class="frame frame--cookz" data-screen="cookz">
+      <a href="#/home" data-goto="home"><img class="logo" src="media/ui/logo-mark.svg" alt="cookz" /></a>
+      <div class="cookz-shell">
+        <div class="cookz-stage" id="cookz-stage">
+          <div class="cookz-grid" id="cookz-grid" data-layout="4">
+            <div class="cookz-grid__cell" data-slot="0"><div class="cookz-fit"><img id="cookz-img-0" alt="" draggable="false" /></div><span class="cookz-slot">1</span><span class="cookz-empty">aquí</span><span class="cookz-orient"><button type="button" data-orient="rot" title="Girar 90 grados">90°</button><button type="button" data-orient="flipx" title="Voltear horizontal">↔</button><button type="button" data-orient="flipy" title="Voltear vertical">↕</button></span></div>
+            <div class="cookz-grid__cell" data-slot="1"><div class="cookz-fit"><img id="cookz-img-1" alt="" draggable="false" /></div><span class="cookz-slot">2</span><span class="cookz-empty">aquí</span><span class="cookz-orient"><button type="button" data-orient="rot" title="Girar 90 grados">90°</button><button type="button" data-orient="flipx" title="Voltear horizontal">↔</button><button type="button" data-orient="flipy" title="Voltear vertical">↕</button></span></div>
+            <div class="cookz-grid__cell" data-slot="2"><div class="cookz-fit"><img id="cookz-img-2" alt="" draggable="false" /></div><span class="cookz-slot">3</span><span class="cookz-empty">aquí</span><span class="cookz-orient"><button type="button" data-orient="rot" title="Girar 90 grados">90°</button><button type="button" data-orient="flipx" title="Voltear horizontal">↔</button><button type="button" data-orient="flipy" title="Voltear vertical">↕</button></span></div>
+            <div class="cookz-grid__cell" data-slot="3"><div class="cookz-fit"><img id="cookz-img-3" alt="" draggable="false" /></div><span class="cookz-slot">4</span><span class="cookz-empty">aquí</span><span class="cookz-orient"><button type="button" data-orient="rot" title="Girar 90 grados">90°</button><button type="button" data-orient="flipx" title="Voltear horizontal">↔</button><button type="button" data-orient="flipy" title="Voltear vertical">↕</button></span></div>
+            <img class="cookz-kanji" id="cookz-kanji" alt="" hidden draggable="false" />
+            <p class="cookz-romaji" id="cookz-romaji" hidden><span></span></p>
+          </div>
+          <div class="cookz-pick" id="cookz-pick" hidden></div>
+        </div>
+        <aside class="cookz-nav" aria-label="Restaurantes">
+          <div class="cookz-meta detail" id="detail">
+            <p class="detail__ja" id="detail-venue-ja"></p>
+            <p class="detail__romaji" id="detail-venue-romaji" hidden></p>
+            <p class="detail__address-ja" id="detail-address-ja" hidden></p>
+            <a
+              class="detail__address"
+              id="detail-address"
+              href="#"
+              target="_blank"
+              rel="noopener noreferrer"
+              hidden
+            ></a>
+            <div class="detail__order-ja order-sheet" id="detail-order-ja" hidden></div>
+            <div class="detail__order order-sheet" id="detail-order" hidden></div>
+          </div>
+          <p class="cookz-nav__venues" id="venue-list"></p>
+        </aside>
+      </div>
+      <button type="button" class="back back--cookz is-on" data-goto="japan2026" aria-label="Atrás"><img src="media/ui/back.svg" alt="" /></button>
+    </section>
+
+    <section class="frame" data-screen="passed-along">
+      <a href="#/home" data-goto="home"><img class="logo" src="media/ui/logo-mark.svg" alt="cookz" /></a>
+      <h1 class="section-title">Passed along</h1>
+      <div class="passed-lang" role="group" aria-label="Idioma">
+        <button type="button" data-passed-lang="en">En</button>
+        <button type="button" class="is-on" data-passed-lang="es">Es</button>
+      </div>
+      <div class="passed" id="passed">
+        <div class="passed__world" id="passed-world"></div>
+      </div>
+      <form class="passed-form" id="passed-form">
+        <p class="passed-form__lead">Mi recomendación</p>
+        <input name="nombre" type="text" required autocomplete="off" placeholder="Nombre del sitio" aria-label="Nombre del sitio">
+        <textarea name="comida" required autocomplete="off" rows="3" placeholder="Prueba esto!" aria-label="Prueba esto"></textarea>
+        <input name="maps" type="url" required autocomplete="off" inputmode="url" placeholder="Pegar el link" aria-label="Pegar el link">
+        <button type="submit" class="passed-form__send">Añadir</button>
+        <p class="passed-form__hint" hidden>
+          <span class="passed-form__hint-line"></span>
+          <button type="button" class="passed-form__hint-site" hidden></button>
+        </p>
+      </form>
+      <aside class="passed-note" id="passed-note" hidden>
+        <p class="passed-note__name"></p>
+        <a class="passed-note__link" target="_blank" rel="noopener noreferrer"></a>
+        <p class="passed-note__food"></p>
+      </aside>
+      <button type="button" class="back back--right is-on" data-goto="japan2026" aria-label="Atrás"><img src="media/ui/back.svg" alt="" /></button>
+    </section>
+
+    <section class="frame" data-screen="konbini">
+      <a href="#/home" data-goto="home"><img class="logo" src="media/ui/logo-mark.svg" alt="cookz" /></a>
+      <h1 class="section-title">Konbini</h1>
+
+      <video
+        id="k-film-frame"
+        class="k-train"
+        src="media/video/metro-gran-angular.mp4"
+        muted
+        playsinline
+        preload="metadata"
+        disablepictureinpicture
+        disableremoteplayback
+      ></video>
+
+      <div class="view k-hub" data-kview="hub">
+        <div class="k-rain" aria-hidden="true"></div>
+        <canvas class="k-fall" id="k-fall" aria-hidden="true"></canvas>
+        <nav class="k-menu" aria-label="Konbini">
+          <a href="#/konbini/tickets-all" data-goto="konbini" data-extra="tickets-all">tickets</a>
+          <a href="#/konbini/tracker" data-goto="konbini" data-extra="tracker">Konbini stats</a>
+          <a href="#/konbini/favos" data-goto="konbini" data-extra="favos">favos</a>
+        </nav>
+      </div>
+
+      <nav class="side-nav" id="side-nav">
+        <div class="side-nav__panel">
+          <a class="nav-tickets" href="#/konbini/tickets-all" data-view="tickets-all">Tickets</a>
+          <a class="nav-tracker" href="#/konbini/tracker" data-view="tracker">Konbini tracker</a>
+          <a class="nav-favos" href="#/konbini/favos" data-view="favos">Favos</a>
+        </div>
+      </nav>
+
+      <div class="view" data-kview="tickets-all">
+        <div class="t-lang" role="group" aria-label="Idioma ticket">
+          <button type="button" class="k-lang-btn" data-ticket-lang="ja">JP</button>
+          <button type="button" class="k-lang-btn" data-ticket-lang="es">ES</button>
+          <button type="button" class="k-lang-btn" data-ticket-lang="en">EN</button>
+        </div>
+        <div class="t-window" id="t-window">
+          <div class="t-track" id="t-track"></div>
+        </div>
+        <nav class="t-sort" id="t-sort" aria-label="Ordenar tickets">
+          <div class="t-sort__track">
+            <button type="button" class="t-sort__btn" data-ticket-sort="date">DATE</button>
+            <button type="button" class="t-sort__btn" data-ticket-sort="total">TOTAL</button>
+            <button type="button" class="t-sort__btn" data-ticket-sort="city">CITY</button>
+            <button type="button" class="t-sort__btn" data-ticket-sort="chain">KONBINI</button>
+            <span class="t-sort__line" aria-hidden="true"></span>
+          </div>
+        </nav>
+      </div>
+
+      <div class="view" data-kview="tracker">
+        <div class="k-osaka">
+          <img src="media/ui/osaka-bg.jpg" alt="" />
+        </div>
+        <canvas class="cs-inspect" id="cs-inspect" aria-label="Inspección del Famichiki"></canvas>
+        <a class="k-stats" href="#/konbini/stats" data-goto="konbini" data-extra="stats"><span class="k-stats__see">see</span><span class="k-stats__word">stats</span></a>
+        <div class="k-keys">
+          <p><span>change</span><kbd>Q</kbd></p>
+          <p><span>inspect</span><kbd>F</kbd></p>
+        </div>
+        <div class="k-actions" hidden>
+          <button type="button" id="k-snack">cambiar snack</button>
+          <button type="button" id="k-look">inspeccionar</button>
+        </div>
+        <aside class="k-grip k-eye" id="k-eye" hidden>
+          <label>altura <input id="k-eye-range" type="range" min="-0.2" max="0.2" step="0.01" value="0.06" /> <span id="k-eye-val">0.06</span></label>
+        </aside>
+        <aside class="k-grip k-metal" id="k-metal" hidden>
+          <label>metal <input id="k-metal-range" type="range" min="0" max="1" step="0.01" value="0.31" /></label>
+        </aside>
+        <aside class="k-grip" id="k-grip" hidden>
+          <p class="k-grip__name" id="k-grip-name"></p>
+          <label>size <input type="range" data-grip="span" min="0.4" max="8" step="0.05" /></label>
+          <label>along <input type="range" data-grip="y" min="-2" max="8" step="0.05" /></label>
+          <label>across <input type="range" data-grip="x" min="-4" max="4" step="0.05" /></label>
+          <label>depth <input type="range" data-grip="z" min="-4" max="4" step="0.05" /></label>
+          <label>face <input type="range" data-grip="ry" min="-180" max="180" step="1" /></label>
+          <label>tilt <input type="range" data-grip="rx" min="-180" max="180" step="1" /></label>
+          <label>roll <input type="range" data-grip="rz" min="-180" max="180" step="1" /></label>
+          <label>palm <input type="range" data-grip="palm" min="0" max="1" step="0.01" /></label>
+          <button type="button" id="k-grip-reset">reset</button>
+        </aside>
+      </div>
+
+      <div class="view" data-kview="stats">
+        <p class="stats-label">STATS</p>
+        <div class="stats-box" id="konbini-stats" aria-live="polite"></div>
+      </div>
+
+      <div class="view" data-kview="favos">
+        <canvas class="k-hero" id="favos-hero" aria-label="Vitamin C1000"></canvas>
+        <p class="k-hero-cap" id="favos-cap"><span class="k-hero-cap__en">VITAMIN C1000</span><span class="k-hero-cap__ja">ビタミンC1000</span></p>
+        <div class="favos-picks" id="favos-picks"></div>
+      </div>
+
+      <button type="button" class="back back--left" id="konbini-back" data-goto="japan2026" aria-label="Atrás"><img src="media/ui/back.svg" alt="" /></button>
+    </section>
+
+    </div>
+    </div>
+    </div>
+    <div class="page-peel" id="page-peel" data-corner="bl" aria-hidden="true">
+      <button type="button" class="page-peel__hit" aria-label="Atrás" tabindex="-1">
+        <img src="media/ui/back.svg" alt="">
+      </button>
+    </div>
+    <script src="data/cooks-data.js"></script>
+    <script src="js/cookz-pool.js"></script>
+    <script src="js/cookz-saved.js"></script>
+    <script src="js/cookz-kanji.js"></script>
+    <script src="js/cookz-venues.js"></script>
+    <script src="js/konbini-romaji-data.js"></script>
+    <script src="js/konbini-stats.js"></script>
+    <script src="js/favos-data.js"></script>
+    <script src="js/app.js"></script>
+    <script type="module" src="js/k-stats-rain.js"></script>
+    <script type="module" src="js/favos-bottle.js"></script>
+    <script type="module" src="js/home-plate.js?v=mesh9"></script>
+    <script type="module" src="js/cs-inspect.js"></script>
+  </body>
+</html>

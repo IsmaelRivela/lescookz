@@ -1,0 +1,13 @@
+# lescookz — preview
+
+Desde la raíz:
+
+```bash
+npm run preview
+```
+
+Puerto **5178**. No usar 8787.
+
+```bash
+"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --profile-directory="Profile 1" "http://127.0.0.1:5178/"
+```

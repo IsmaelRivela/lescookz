@@ -1,0 +1,46 @@
+---
+description: Levamps/IA — preview con recarga automática en Chrome personal (Isma), sin pedir permiso
+alwaysApply: true
+globs:
+  - "**/Desktop/IA/**"
+---
+
+# Preview web en Chrome personal (Levamps)
+
+En proyectos bajo `~/Desktop/IA` (vamps, prueba, Clientes creativos): si hay `index.html` o montas una web estática, **arranca el preview tú mismo** en cuanto puedas servir la página. **No preguntes** si quieren verla. **No uses** `python -m http.server` (refresco manual).
+
+En **WPP** (`~/Desktop/WPP`) esta regla no aplica salvo que el usuario pida preview explícito.
+
+## Chrome (solo perfil personal)
+
+Abre la URL en el perfil **Isma**, nunca el de trabajo.
+
+- Personal: `--profile-directory="Profile 1"` (Ismael Rivela, Gmail)
+- Trabajo, prohibido para preview creativo: `--profile-directory="Default"` (wppproduction.com)
+
+```bash
+"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --profile-directory="Profile 1" "http://127.0.0.1:PUERTO/"
+```
+
+## Servidor (live reload)
+
+Desde la raíz del proyecto, en segundo plano.
+
+**Con Sass:**
+
+```bash
+npx --yes sass scss/main.scss:css/main.css --watch --no-source-map --style=expanded
+npx --yes browser-sync start --server --files "index.html, css/**/*.css, js/**/*.js, assets/**/*" --port 5174 --listen 127.0.0.1 --no-open --no-notify --no-ui
+```
+
+**Sin Sass** (p. ej. Cookz: `styles.css`, `main.js`, `cooks-data.js` en raíz):
+
+```bash
+npx --yes browser-sync start --server --files "index.html, *.css, *.js, assets/**/*" --port PUERTO --listen 127.0.0.1 --no-open --no-notify --no-ui
+```
+
+Puerto: **5174** por defecto; si está ocupado, el siguiente libre (**5175** para Cookz, etc.). **No usar 8787** en este Mac (Chrome rechaza la conexión). Si ya corre browser-sync **en esta carpeta**, reutiliza esa URL.
+
+Tras levantar el servidor, abre Chrome personal con el comando de arriba. Di la URL **una vez**. Al guardar HTML/CSS/JS (y assets), el tab se actualiza solo.
+
+No aplica a apps que no se previsualizan en navegador (solo API, Blender, etc.).

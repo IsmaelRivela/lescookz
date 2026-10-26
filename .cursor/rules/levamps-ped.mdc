@@ -1,0 +1,10 @@
+---
+description: Landing ped GTA de levamps.com y Blender MCP — leer la skill levamps-ped
+alwaysApply: true
+---
+
+# Levamps ped
+
+Si el trabajo toca la landing de levamps, el ped GTA, IFP, Blender MCP o `landings/ped|classic`, lee y sigue la skill `levamps-ped`.
+
+No redescubras el pipeline: no apliques IFP como pose absoluta, no gires Root, no borres la landing classic.
