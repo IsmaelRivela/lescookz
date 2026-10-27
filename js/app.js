@@ -1713,6 +1713,7 @@ function bindLienzo() {
 
 const PASSED_KEY = "cookz-passed";
 const PASSED_URL = "https://ikistvqinmhtvifsgoev.supabase.co/rest/v1/passed";
+const PASSED_FUN = "https://ikistvqinmhtvifsgoev.supabase.co/functions/v1/map-link";
 const PASSED_PUBLIC = "sb_publishable_hEb7K3aZDUsZPpvGzwij3g_tSg3lQ_u";
 
 function bindPassed() {
@@ -1750,10 +1751,9 @@ function bindPassed() {
       send: "Add",
       link: "See location",
       maybe: "Maybe you meant this?",
-      japan: "That place is not in Japan",
+      japan: "japan spots only ;)",
       linkOnly: "Paste the map link",
       check: "Couldn't check the link",
-      short: "Copy the link from the map's address bar",
     },
     es: {
       lead: "Mi recomendación",
@@ -1763,10 +1763,9 @@ function bindPassed() {
       send: "Añadir",
       link: "Descubrir ubicación",
       maybe: "¿Tal vez te refieras a este?",
-      japan: "Ese sitio no está en Japón",
+      japan: "solo locales de japon ;)",
       linkOnly: "Pega el enlace del mapa",
       check: "No pude comprobar el enlace",
-      short: "Copia el enlace de la barra del mapa",
     },
   };
   let passedLang = localStorage.getItem("cookz-passed-lang") === "en" ? "en" : "es";
@@ -1840,34 +1839,77 @@ function bindPassed() {
     } catch { /* a written address */ }
     return "";
   };
+  const queryVariants = (q) => {
+    const full = String(q || "").replace(/\s+/g, " ").trim();
+    if (!full) return [];
+    const noZip = full.replace(/\s+\d{3}-\d{4}$/, "").trim();
+    const parts = noZip.split(",").map((part) => part.trim()).filter(Boolean);
+    const variants = [full];
+    if (noZip !== full) variants.push(noZip);
+    for (let i = 1; i < parts.length - 1; i += 1) variants.push(parts.slice(i).join(", "));
+    return [...new Set(variants)];
+  };
   const countryAt = async (coords, q) => {
-    let res;
+    const lookups = coords ? [""] : queryVariants(q);
+    if (!lookups.length) return "check";
+    for (const variant of lookups) {
+      let res;
+      try {
+        res = await fetch(coords
+          ? `https://photon.komoot.io/reverse?lat=${encodeURIComponent(coords.lat)}&lon=${encodeURIComponent(coords.lon)}`
+          : `https://photon.komoot.io/api/?q=${encodeURIComponent(variant)}&limit=1`);
+      } catch { return "check"; }
+      if (!res.ok) return "check";
+      let data;
+      try { data = await res.json(); } catch { return "check"; }
+      const code = data.features?.[0]?.properties?.countrycode;
+      if (!code) continue;
+      return code === "JP" ? "jp" : "japan";
+    }
+    return "check";
+  };
+  const asMapUrl = (text) => {
+    const raw = String(text || "").trim();
+    const withScheme = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
     try {
-      res = await fetch(coords
-        ? `https://photon.komoot.io/reverse?lat=${encodeURIComponent(coords.lat)}&lon=${encodeURIComponent(coords.lon)}`
-        : `https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=1`);
-    } catch { return "check"; }
-    if (!res.ok) return "check";
-    let data;
-    try { data = await res.json(); } catch { return "check"; }
-    const code = data.features?.[0]?.properties?.countrycode;
-    if (!code) return "japan";
-    return code === "JP" ? "jp" : "japan";
+      const url = new URL(withScheme);
+      const host = url.hostname.toLowerCase();
+      const short = host === "maps.app.goo.gl" || (host === "goo.gl" && url.pathname.startsWith("/maps"));
+      const mapsHost = host === "maps.google.com" || host === "maps.google.co.jp" || host === "maps.google.es";
+      const googlePage = host === "google.com" || host === "www.google.com"
+        || host === "google.co.jp" || host === "www.google.co.jp"
+        || host === "google.es" || host === "www.google.es";
+      if (!short && !mapsHost && !(googlePage && url.pathname.startsWith("/maps"))) return "";
+      return url.toString();
+    } catch { return ""; }
+  };
+  const readExpanded = async (target, headers) => {
+    const res = await fetch(target, headers ? { headers } : undefined);
+    if (!res.ok) return "";
+    const data = await res.json();
+    return typeof data.url === "string" ? data.url : "";
+  };
+  const expandMapLink = async (link) => {
+    const encoded = encodeURIComponent(link);
+    try {
+      const local = await readExpanded(`/map-link?url=${encoded}`);
+      if (local) return local;
+    } catch { /* the public site has no local route */ }
+    try {
+      return await readExpanded(`${PASSED_FUN}?url=${encoded}`, passedHeaders);
+    } catch { return ""; }
   };
   const placeInJapan = async (text) => {
-    const link = text.trim();
-    if (!/^https?:\/\//i.test(link)) return "link";
+    const link = asMapUrl(text);
+    if (!link) return "link";
     let coords = coordsOf(link);
     let q = coords ? "" : queryOf(link);
     if (!coords && !q) {
-      try {
-        const res = await fetch(link, { redirect: "follow" });
-        const landed = res.url || "";
-        coords = coordsOf(landed);
-        q = coords ? "" : queryOf(landed);
-      } catch { /* short links often hide the destination */ }
+      const landed = await expandMapLink(link);
+      coords = coordsOf(landed);
+      q = coords ? "" : queryOf(landed);
     }
-    if (!coords && !q) return "short";
+    if (!coords && !q) return "check";
     return countryAt(coords, q);
   };
   let hintKind = "";
@@ -2213,7 +2255,7 @@ function bindPassed() {
       const where = await placeInJapan(note.maps);
       if (where !== "jp") {
         form.dataset.sending = "";
-        showHint(where === "link" ? "linkOnly" : where === "short" ? "short" : where === "check" ? "check" : "japan");
+        showHint(where === "link" ? "linkOnly" : where === "check" ? "check" : "japan");
         return;
       }
       let ok = false;
