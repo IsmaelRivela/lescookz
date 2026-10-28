@@ -17,7 +17,7 @@ const TICKETS_FALLBACK = [
 ];
 
 let TICKETS = [...TICKETS_FALLBACK];
-const TICKET_JSON = "/data/tickets.json";
+const TICKET_JSON = "data/tickets.json";
 const TICKET_LANG_KEY = "cookz-konbini-lang";
 const TICKET_SORT_KEY = "cookz-konbini-sort";
 
@@ -223,11 +223,8 @@ function refreshTicketPanels() {
 }
 
 function normalizeTicket(row) {
-  const rel = row.imageSrc || row.src || (row.image ? `../${row.image}` : "");
-  const src =
-    rel.startsWith("../konbini-tickets/")
-      ? rel.replace(/^\.\.\//, "/")
-      : rel;
+  const rel = String(row.image || row.imageSrc || row.src || "");
+  const src = rel.replace(/^\.\.\//, "").replace(/^\/+/, "");
   const copy =
     row.copy && typeof row.copy === "object"
       ? row.copy
