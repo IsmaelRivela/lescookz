@@ -2790,13 +2790,15 @@ function cleanManifest(html) {
 let japanSetWidth = 0;
 let japanLoopStart = 0;
 let japanPosition = 0;
-let japanFilmLaid = false;
 let japanVelocity = 0;
+let japanFriction = 0.94;
 let japanTickRaf = 0;
 let japanPointerDown = false;
+let japanPointerTouch = false;
 let japanPointerLastX = 0;
 let japanPointerVel = 0;
 let japanDragDistance = 0;
+let japanMoves = [];
 
 function cloneJapanCard(card) {
   const clone = card.cloneNode(true);
@@ -2887,7 +2889,7 @@ function syncJapanLogo() {
   const lr = base.getBoundingClientRect();
   let hit = null;
   let area = 0;
-  frame.querySelectorAll(".j-card--konbini video").forEach((video) => {
+  frame.querySelectorAll(".j-card--konbini .j-card__film").forEach((video) => {
     const vr = video.getBoundingClientRect();
     const left = Math.max(lr.left, vr.left);
     const right = Math.min(lr.right, vr.right);
@@ -2916,13 +2918,13 @@ function syncJapanLogo() {
 }
 
 function japanTick() {
-  if (Math.abs(japanVelocity) < 0.06) {
+  if (Math.abs(japanVelocity) < 0.08) {
     japanVelocity = 0;
     japanTickRaf = 0;
     return;
   }
   japanPosition += japanVelocity;
-  japanVelocity *= 0.94;
+  japanVelocity *= japanFriction;
   applyJapanTransform();
   japanTickRaf = requestAnimationFrame(japanTick);
 }
@@ -2959,18 +2961,6 @@ function setupJapanCarousel() {
   track.insertBefore(beforeFrag, cards[0]);
   track.appendChild(afterFrag);
   track.dataset.japanReady = "1";
-  track.querySelectorAll(".j-card--konbini video").forEach((video) => {
-    video.muted = true;
-    video.play().catch(() => {});
-    const lay = () => {
-      if (japanFilmLaid) return;
-      if (!video.videoWidth) return;
-      japanFilmLaid = true;
-      layoutJapan();
-    };
-    if (video.readyState >= 1) lay();
-    else video.addEventListener("loadedmetadata", lay, { once: true });
-  });
 }
 
 function initJapanMotion() {
@@ -2991,10 +2981,12 @@ function initJapanMotion() {
       if (!touch && !e.target.closest("#j-window")) return;
       if (!touch && e.target.closest(".j-card")) return;
       japanPointerDown = true;
+      japanPointerTouch = touch;
       japanDragDistance = 0;
       japanPointerLastX = e.clientX;
       japanPointerVel = 0;
       japanVelocity = 0;
+      japanMoves = [{ x: e.clientX, t: performance.now() }];
       rail.classList.add("is-dragging");
       try { japan.setPointerCapture(e.pointerId); } catch { /* pointer already gone */ }
     },
@@ -3009,7 +3001,9 @@ function initJapanMotion() {
       japanPointerLastX = e.clientX;
       japanDragDistance += Math.abs(dx);
       japanPointerVel = dx;
-      japanPosition += dx;
+      japanPosition += dx * (japanPointerTouch ? 1.35 : 1);
+      japanMoves.push({ x: e.clientX, t: performance.now() });
+      if (japanMoves.length > 6) japanMoves.shift();
       applyJapanTransform();
     },
     { passive: true },
@@ -3020,7 +3014,24 @@ function initJapanMotion() {
     japanPointerDown = false;
     rail.classList.remove("is-dragging");
     try { japan.releasePointerCapture(e.pointerId); } catch { /* already released */ }
-    japanVelocity = japanPointerVel * 0.85;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce) japanVelocity = 0;
+    else if (japanPointerTouch) {
+      japanFriction = 0.962;
+      const now = performance.now();
+      const recent = japanMoves.filter((sample) => now - sample.t <= 120);
+      let perFrame = japanPointerVel;
+      if (recent.length >= 2) {
+        const a = recent[0];
+        const b = recent[recent.length - 1];
+        const dt = Math.max(16, b.t - a.t);
+        perFrame = ((a.x - b.x) / dt) * 16;
+      }
+      japanVelocity = Math.max(-46, Math.min(46, perFrame * 1.85));
+    } else {
+      japanFriction = 0.94;
+      japanVelocity = japanPointerVel * 0.85;
+    }
     japanKickInertia();
   };
   japan.addEventListener("pointerup", endDrag);
@@ -3057,7 +3068,7 @@ function centerJapanKonbini() {
   });
 
   const imgCenter = (card) => {
-    const img = card.querySelector("video, img");
+    const img = card.querySelector(".j-card__film, img, video");
     if (!img) return card.offsetLeft + card.offsetWidth / 2;
     const trackRect = track.getBoundingClientRect();
     const imgRect = img.getBoundingClientRect();
@@ -3832,7 +3843,7 @@ function paintLoad(key) {
 
 function noteUrl(key, url, el) {
   if (!key || key === "home" || !url) return;
-  if (el?.tagName === "VIDEO") return;
+  if (el?.tagName === "VIDEO" || el?.tagName === "IFRAME") return;
   const bag = screenBag(key);
   if (bag.get(url) === "ok") return;
   bag.set(url, "wait");
@@ -3967,13 +3978,13 @@ function releaseScreen(key) {
     el.removeAttribute("data-src");
     if (el.tagName === "VIDEO") el.preload = phone ? "metadata" : "auto";
     noteUrl(key, src, el);
-    if (el.tagName === "VIDEO") el.src = src;
+    if (el.tagName === "VIDEO" || el.tagName === "IFRAME") el.src = src;
     else useSrc(el, src);
-    if (el.tagName !== "VIDEO" && el.complete && el.naturalWidth) {
+    if (el.tagName !== "VIDEO" && el.tagName !== "IFRAME" && el.complete && el.naturalWidth) {
       el.dispatchEvent(new Event("load"));
     }
     if (el.tagName === "VIDEO" && el.hasAttribute("autoplay")) el.play?.().catch(() => {});
-    if (el.closest(".j-card")) {
+    if (el.closest(".j-card") && el.tagName !== "IFRAME") {
       el.addEventListener(el.tagName === "VIDEO" ? "loadeddata" : "load", () => layoutJapan(), { once: true });
     }
   });

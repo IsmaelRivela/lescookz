@@ -370,21 +370,34 @@ button { border: 0; background: none; padding: 0; cursor: pointer; text-align: l
   max-width: 98%;
   max-height: 98%;
 }
-.j-card--konbini video {
+.j-card--konbini .j-card__film {
+  position: relative;
   display: block;
   height: 100vh;
-  width: auto;
+  width: calc(100vh * 9 / 16);
   max-width: none;
-  max-height: none;
-  object-fit: contain;
+  overflow: hidden;
+  background: #111;
   pointer-events: none;
-  transition: opacity 0.35s ease;
+}
+.j-card--konbini .j-card__film-player {
+  position: absolute;
+  left: 0;
+  top: -12%;
+  width: 100%;
+  height: 128%;
+  border: 0;
+  pointer-events: none;
 }
 .j-card:hover img,
 .j-card:focus-visible img,
 .j-card:hover video,
 .j-card:focus-visible video {
   opacity: 0.2;
+}
+.j-card:hover .j-card__film,
+.j-card:focus-visible .j-card__film {
+  opacity: 1;
 }
 .j-card__stack {
   position: relative;
@@ -412,8 +425,8 @@ button { border: 0; background: none; padding: 0; cursor: pointer; text-align: l
 .j-card--passed:focus-within .j-card__echo--down {
   transform: translateY(100%);
 }
-.j-card--konbini:hover video,
-.j-card--konbini:focus-visible video {
+.j-card--konbini:hover .j-card__film,
+.j-card--konbini:focus-visible .j-card__film {
   opacity: 1;
 }
 .j-card__label {
