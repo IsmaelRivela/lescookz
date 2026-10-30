@@ -77,7 +77,9 @@ if (canvas && panel) {
   const explore = plateCenter?.querySelector(".home__explore");
   let spin = 0;
   let spinTarget = 0;
-  const lean = THREE.MathUtils.degToRad(22) * 0.3 * 1.2;
+  const lean = THREE.MathUtils.degToRad(20);
+  const phone = () => matchMedia("(max-width: 820px)").matches;
+  let goTimer = 0;
   const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
   let raf = 0;
 
@@ -181,8 +183,8 @@ if (canvas && panel) {
     if (!homeOn() || document.hidden) return;
     const goalX = reduceMotion ? 0 : -pointer.y * lean;
     const goalY = reduceMotion ? 0 : pointer.x * lean;
-    tilt.x += (goalX - tilt.x) * 0.08;
-    tilt.y += (goalY - tilt.y) * 0.08;
+    tilt.x += (goalX - tilt.x) * 0.18;
+    tilt.y += (goalY - tilt.y) * 0.18;
     spin += (spinTarget - spin) * (reduceMotion ? 1 : 0.09);
     paint();
     const moving = Math.abs(goalX - tilt.x) + Math.abs(goalY - tilt.y) + Math.abs(spinTarget - spin);
@@ -214,14 +216,14 @@ if (canvas && panel) {
   new ResizeObserver(() => resize()).observe(canvas);
   window.addEventListener("pointermove", (event) => {
     const rect = canvas.getBoundingClientRect();
-    pointer.x = THREE.MathUtils.clamp((event.clientX - (rect.left + rect.width / 2)) / (window.innerWidth * 0.5), -1, 1);
-    pointer.y = THREE.MathUtils.clamp((event.clientY - (rect.top + rect.height / 2)) / (window.innerHeight * 0.5), -1, 1);
+    pointer.x = THREE.MathUtils.clamp((event.clientX - (rect.left + rect.width / 2)) / (window.innerWidth * 0.22), -1, 1);
+    pointer.y = THREE.MathUtils.clamp((event.clientY - (rect.top + rect.height / 2)) / (window.innerHeight * 0.22), -1, 1);
     kick();
   });
   window.addEventListener("pointerleave", () => {
     pointer.x = 0;
     pointer.y = 0;
-    spinTarget = 0;
+    if (!phone()) spinTarget = 0;
     kick();
   });
   function overPlate(event) {
@@ -231,7 +233,14 @@ if (canvas && panel) {
     return (nx * nx) / (0.72 * 0.72) + (ny * ny) / (0.7 * 0.7) <= 1;
   }
 
+  function goJapan() {
+    clearTimeout(goTimer);
+    goTimer = 0;
+    location.hash = "/japan2026";
+  }
+
   canvas.addEventListener("pointermove", (event) => {
+    if (phone()) return;
     const onPlate = overPlate(event);
     canvas.style.cursor = onPlate ? "pointer" : "default";
     const next = onPlate ? 1 : 0;
@@ -241,12 +250,38 @@ if (canvas && panel) {
   });
   canvas.addEventListener("pointerleave", () => {
     canvas.style.cursor = "default";
+    if (phone()) return;
     spinTarget = 0;
     kick();
   });
   canvas.addEventListener("click", (event) => {
     if (!overPlate(event)) return;
-    location.hash = "/japan2026";
+    if (!phone()) {
+      goJapan();
+      return;
+    }
+    if (spinTarget < 1) {
+      spinTarget = 1;
+      kick();
+      clearTimeout(goTimer);
+      goTimer = setTimeout(goJapan, 3000);
+      return;
+    }
+    goJapan();
+  });
+  document.addEventListener("click", (event) => {
+    if (!goTimer) return;
+    if (canvas.contains(event.target) && overPlate(event)) return;
+    clearTimeout(goTimer);
+    goTimer = 0;
+  });
+  window.addEventListener("hashchange", () => {
+    if (location.hash === "#/home" || location.hash === "" || location.hash === "#") return;
+    clearTimeout(goTimer);
+    goTimer = 0;
+    if (spinTarget === 0) return;
+    spinTarget = 0;
+    kick();
   });
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden) paint();

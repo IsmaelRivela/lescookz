@@ -381,7 +381,8 @@ function resizeHero() {
   if (!w || !h || (w === heroW && h === heroH)) return;
   heroW = w;
   heroH = h;
-  const dpr = Math.min(devicePixelRatio || 1, 2);
+  const phone = matchMedia("(max-width: 820px)").matches;
+  const dpr = phone ? 1 : Math.min(devicePixelRatio || 1, 2);
   heroRenderer.setPixelRatio(dpr);
   heroRenderer.setSize(w, h, false);
 }
@@ -480,6 +481,11 @@ preloadAll()
     }
   })
   .catch((err) => console.error("favos preload", err));
+
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) stopMotion();
+  else if (motionOn) startMotion();
+});
 
 addEventListener("resize", () => {
   heroW = 0;

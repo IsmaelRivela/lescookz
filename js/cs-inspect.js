@@ -448,6 +448,12 @@ if (!canvas || !view) {
       ? clip.frames[0].map((b) => ({ pos: b.pos.clone(), quat: b.quat.clone() }))
       : samplePose(time, clip, mode === "idle");
     blendPalm(pose);
+    if (window.matchMedia("(max-width: 820px)").matches) {
+      for (let i = 0; i < bones.length; i += 1) {
+        if (!/UpperArm|Forearm/.test(bones[i].name) || /Twist|Finger/.test(bones[i].name)) continue;
+        pose[i].pos.multiplyScalar(1.1);
+      }
+    }
     const worlds = worldMatrices(pose);
     for (const mesh of meshes) {
       if (mesh === knifeMesh) continue;
@@ -497,7 +503,7 @@ if (!canvas || !view) {
     const mobile = window.matchMedia("(max-width: 820px)").matches;
     const hFov = THREE.MathUtils.degToRad(90);
     camera.fov = mobile
-      ? 78
+      ? 70
       : THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(hFov / 2) / camera.aspect));
     camera.near = 1;
     camera.position.set(0, 0, 0);
@@ -522,7 +528,7 @@ if (!canvas || !view) {
     // tall frame without being pulled toward the middle.
     if (window.matchMedia("(max-width: 820px)").matches) {
       camera.getWorldDirection(camBack);
-      camera.position.addScaledVector(camBack, -10);
+      camera.position.addScaledVector(camBack, -4);
       camera.lookAt(lookTarget);
     }
   }

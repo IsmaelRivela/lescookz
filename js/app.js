@@ -1,4 +1,14 @@
-const VENUES = typeof buildCookzVenues === "function" ? buildCookzVenues("es") : [];
+const SITE_LANG_KEY = "cookz-lang";
+function readLangCookie() {
+  const hit = document.cookie.match(/(?:^|; )cookz-lang=(es|en)(?:;|$)/);
+  return hit ? hit[1] : "";
+}
+function readSiteLang() {
+  return readLangCookie() || "es";
+}
+let siteLang = readSiteLang();
+let manifestShown = "";
+let VENUES = typeof buildCookzVenues === "function" ? buildCookzVenues(siteLang) : [];
 
 const FAVOS = window.FAVOS_ITEMS || [];
 
@@ -37,7 +47,7 @@ function cookzLandingHero() {
   return venue?.hover || venue?.photos?.[0] || null;
 }
 let konbiniView = "hub";
-let ticketLang = localStorage.getItem(TICKET_LANG_KEY) || "es";
+let ticketLang = siteLang;
 let ticketSort = localStorage.getItem(TICKET_SORT_KEY) || "date";
 
 const TICKET_LABELS = {
@@ -259,11 +269,47 @@ function syncTicketLangUi() {
 }
 
 function setTicketLang(lang) {
-  ticketLang = lang;
-  localStorage.setItem(TICKET_LANG_KEY, lang);
+  ticketLang = lang === "en" ? "en" : "es";
   syncTicketLangUi();
   refreshTicketPanels();
   renderKonbiniStatsPanel();
+}
+
+function t(key) {
+  const pack = window.COOKZ_COPY?.[siteLang] || {};
+  const value = pack[key];
+  return value == null ? "" : String(value);
+}
+
+function applyCopy() {
+  $$("[data-i18n]").forEach((el) => {
+    const value = t(el.dataset.i18n);
+    if (!value) return;
+    const attr = el.dataset.i18nAttr;
+    if (attr) el.setAttribute(attr, value);
+    else el.textContent = value;
+  });
+  loadManifest(siteLang);
+}
+
+function applySiteLang(lang, { rebuild = true, save = true } = {}) {
+  siteLang = lang === "en" ? "en" : "es";
+  if (save) {
+    document.cookie = `cookz-lang=${siteLang}; Path=/; Max-Age=31536000; SameSite=Lax`;
+    document.documentElement.dataset.lang = "set";
+    const gate = $("#lang-gate");
+    if (gate) gate.hidden = true;
+  }
+  document.documentElement.lang = siteLang;
+  applyCopy();
+  if (typeof buildCookzVenues === "function") VENUES = buildCookzVenues(siteLang);
+  setTicketLang(siteLang);
+  window.setPassedLang?.(siteLang);
+  if (!rebuild) return;
+  buildCookzList($("#venue-list"));
+  if ($("#lienzo-world")?.childElementCount) buildLienzoField();
+  const cookzOn = document.querySelector('.frame[data-screen="cookz"].is-on, .frame[data-screen="lienzo"].is-on');
+  if (cookzOn) paintCookz();
 }
 
 function readSortLineBox(track, active) {
@@ -342,6 +388,15 @@ function setTicketSort(key) {
 function route() {
   const [screen, sub] = (location.hash.replace(/^#\/?/, "") || "home").split("/");
   return { screen, sub };
+}
+
+function paintSiteTree() {
+  const { screen, sub } = route();
+  const here = sub && sub !== "hub" ? sub : "";
+  $$("#site-tree [data-tree]").forEach((btn) => {
+    const extra = btn.dataset.extra || "";
+    btn.classList.toggle("is-on", btn.dataset.tree === screen && extra === here);
+  });
 }
 
 function go(screen, extra) {
@@ -728,7 +783,8 @@ function paintCookzGallery(urls, frames, activeSlot = -1) {
     if (src) {
       cell.classList.add("has-img");
       cell.classList.remove("is-empty");
-      if (cookzSrcKey(img.getAttribute("src")) !== cookzSrcKey(src)) img.src = src;
+      showCookzImg(img, src);
+      trackMedia("cookz", img);
       img.hidden = false;
       applyCookzFrame(img, frames?.[src]);
     } else {
@@ -854,7 +910,7 @@ function renderCookzPick(venue, on) {
     const count = document.createElement("div");
     count.className = "cookz-count";
     count.setAttribute("role", "group");
-    count.setAttribute("aria-label", "Cuántas fotos");
+    count.setAttribute("aria-label", t("photoCount"));
     for (let n = 1; n <= 4; n++) {
       const btn = document.createElement("button");
       btn.type = "button";
@@ -873,7 +929,7 @@ function renderCookzPick(venue, on) {
       btn.dataset.src = item.src;
       btn.title = item.name;
       const img = document.createElement("img");
-      img.src = item.src;
+      useSrc(img, item.src);
       img.alt = item.name;
       img.draggable = false;
       const cap = document.createElement("span");
@@ -892,7 +948,7 @@ function renderCookzPick(venue, on) {
     btn.classList.toggle("is-on", Number(btn.dataset.count) === board.count);
   });
   const note = bar.querySelector(".cookz-pick__note");
-  if (note) note.textContent = "Arrastra al sitio. En la foto, arrastra para encuadrar. 90° gira, las flechas voltean.";
+  if (note) note.textContent = t("dragHint");
   bar.querySelectorAll(".cookz-pick__row button").forEach((btn) => {
     const index = board.slots.indexOf(btn.dataset.src);
     btn.classList.toggle("is-on", index >= 0);
@@ -1089,11 +1145,11 @@ function paintCookz() {
       addrLink.rel = "noopener noreferrer";
       addrLink.hidden = false;
       if (venue.franchise) {
-        addrLink.textContent = "Franquicia — ver ubicaciones en Google Maps";
+        addrLink.textContent = t("franchise");
       } else if (venue.addressLine) {
         addrLink.textContent = venue.addressLine;
       } else {
-        addrLink.textContent = "Buscar en Google Maps";
+        addrLink.textContent = t("searchMaps");
       }
     } else {
       addrLink.hidden = true;
@@ -1166,6 +1222,17 @@ function show(screen) {
 
   const sub = screen === "konbini";
   $$("[data-kview]").forEach((el) => el.classList.toggle("is-on", sub && el.dataset.kview === konbiniView));
+  const kTitle = document.querySelector('.frame[data-screen="konbini"] .section-title');
+  if (kTitle && sub) {
+    const names = {
+      hub: "Konbini",
+      "tickets-all": "tickets",
+      tracker: "tracker",
+      favos: "favos",
+      stats: "stats",
+    };
+    kTitle.textContent = names[konbiniView] || "Konbini";
+  }
   const nav = $("#side-nav");
   if (nav) {
     nav.classList.toggle("is-on", sub && konbiniView !== "hub");
@@ -1203,13 +1270,27 @@ function show(screen) {
   if (sub && konbiniView === "stats") {
     renderKonbiniStatsPanel();
   }
-  if (window.favosBottle) {
-    window.favosBottle.setActive(sub && konbiniView === "favos");
-    window.favosBottle.syncActive?.();
-  }
-  if (window.syncFavosRide) window.syncFavosRide(sub && konbiniView === "favos");
+  const favosOn = sub && konbiniView === "favos";
+  if (window.syncFavosRide) window.syncFavosRide(favosOn);
+  const favosArrived = document.querySelector('[data-kview="favos"]')?.classList.contains("is-arrived");
+  if (window.favosBottle) window.favosBottle.setActive(favosOn && !!favosArrived);
   if (window.csInspect) {
     window.csInspect.setActive(sub && konbiniView === "tracker");
+  }
+  if (screen === "cookz") {
+    releaseScreen(lienzoReturn ? "cookz" : "lienzo");
+    warmCookzHovers();
+  } else if (screen && screen !== "home") {
+    cookzWarmToken += 1;
+    releaseScreen(screen);
+  } else cookzWarmToken += 1;
+  if (sub && konbiniView === "tickets-all") {
+    $$("#t-track img[data-defer]").forEach((img) => {
+      const pending = img.dataset.defer;
+      delete img.dataset.defer;
+      useSrc(img, pending);
+    });
+    paintLoad("tickets");
   }
 }
 
@@ -1317,7 +1398,8 @@ function buildLienzoField() {
         const photo = document.createElement("span");
         photo.className = "lienzo__photo";
         const img = document.createElement("img");
-        img.src = venue.hover.replace(/hover\.jpg$/, "lienzo.jpg");
+        useSrc(img, venue.hover.replace(/hover\.jpg$/, "lienzo.jpg"));
+        if (tx === 0 && ty === 0) trackMedia("lienzo", img);
         img.alt = "";
         img.draggable = false;
         img.decoding = "async";
@@ -1460,12 +1542,14 @@ function playCaseZoom() {
     easing: LIENZO_ZOOM_EASE,
     fill: "both",
   });
-  lienzoCaseAnim.onfinish = () => {
+  const settle = () => {
     if (gen !== caseZoomGen) return;
     frame.style.transform = "translate(0px, 0px) scale(1)";
     frame.classList.add("is-case-ready");
     openLienzoVenue.busy = false;
   };
+  lienzoCaseAnim.onfinish = settle;
+  window.setTimeout(settle, LIENZO_ZOOM_MS + 80);
 }
 
 function lienzoCoverSrc(index, img) {
@@ -1511,10 +1595,20 @@ function openLienzoVenue(index, img) {
   go("cookz");
 }
 
-function shrinkLienzoCase() {
-  if (shrinkLienzoCase.busy) return;
+function shrinkLienzoCase(leaveTo) {
+  if (typeof leaveTo === "string" && leaveTo) shrinkLienzoCase.leaveTo = leaveTo;
+  if (shrinkLienzoCase.busy) {
+    if (lienzoCaseAnim) {
+      try { lienzoCaseAnim.finish(); } catch { /* the timeout still closes it */ }
+    }
+    return;
+  }
   const frame = cookzFrame();
+  let closed = false;
   const finish = () => {
+    if (closed) return;
+    closed = true;
+    window.clearTimeout(shrinkLienzoCase.safety);
     shrinkLienzoCase.busy = false;
     openLienzoVenue.busy = false;
     if (lienzoCaseAnim) {
@@ -1536,9 +1630,18 @@ function shrinkLienzoCase() {
     dropLienzoCover();
     lienzoZoom = null;
     lienzoReturn = false;
-    go("cookz");
+    if (frame) {
+      const back = frame.querySelector(".back--cookz");
+      if (back) back.dataset.goto = "japan2026";
+    }
+    const next = shrinkLienzoCase.leaveTo || "cookz";
+    shrinkLienzoCase.leaveTo = "";
+    const slash = next.indexOf("/");
+    if (slash === -1) go(next);
+    else go(next.slice(0, slash), next.slice(slash + 1));
     if (frame) requestAnimationFrame(() => frame.classList.remove("is-case-cut"));
   };
+  shrinkLienzoCase.safety = window.setTimeout(finish, LIENZO_ZOOM_MS + 420);
   if (!frame || lienzoReduced() || !lienzoCase) {
     shrinkLienzoCase.busy = true;
     finish();
@@ -1589,13 +1692,10 @@ function shrinkLienzoCase() {
     { duration: LIENZO_ZOOM_MS, delay: 180, easing: LIENZO_ZOOM_EASE, fill: "both" },
   );
   lienzoCaseAnim = anim;
-  let closed = false;
-  const done = () => {
-    if (closed || gen !== caseZoomGen) return;
-    closed = true;
+  anim.onfinish = () => {
+    if (gen !== caseZoomGen) return;
     finish();
   };
-  anim.onfinish = done;
 }
 
 function bindLienzo() {
@@ -1751,6 +1851,8 @@ function bindPassed() {
       japan: "japan spots only ;)",
       linkOnly: "Paste the map link",
       check: "Couldn't check the link",
+      mapsOpen: "Open Maps",
+      mapsNote: "Search the spot, copy the link, paste it here.",
     },
     es: {
       lead: "Mi recomendación",
@@ -1763,9 +1865,11 @@ function bindPassed() {
       japan: "solo locales de japon ;)",
       linkOnly: "Pega el enlace del mapa",
       check: "No pude comprobar el enlace",
+      mapsOpen: "Abrir Maps",
+      mapsNote: "Busca el sitio, copia el enlace y pégalo.",
     },
   };
-  let passedLang = localStorage.getItem("cookz-passed-lang") === "en" ? "en" : "es";
+  let passedLang = siteLang === "en" ? "en" : "es";
   let remoteNotes = [];
   let remoteReady = false;
   const passedHeaders = {
@@ -1965,11 +2069,21 @@ function bindPassed() {
     });
     const send = form?.querySelector(".passed-form__send");
     if (send) send.textContent = text.send;
-    $$("[data-passed-lang]").forEach((btn) => {
-      btn.classList.toggle("is-on", btn.dataset.passedLang === passedLang);
-    });
+    const mapsGo = form?.querySelector(".passed-form__maps");
+    if (mapsGo) mapsGo.textContent = text.mapsOpen;
+    const mapsNote = form?.querySelector(".passed-form__maps-note");
+    if (mapsNote) mapsNote.textContent = text.mapsNote;
+    syncMaps();
     paintHint();
     fitFood();
+  };
+  const syncMaps = () => {
+    const mapsGo = form?.querySelector(".passed-form__maps");
+    if (!mapsGo) return;
+    const nombre = form.querySelector('[name="nombre"]')?.value.trim();
+    mapsGo.href = nombre
+      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${nombre} Japan`)}`
+      : "https://www.google.com/maps";
   };
   const orderOf = (venue) => {
     const source = typeof COOKS !== "undefined" ? COOKS.find((item) => item.id === venue.id) : null;
@@ -2001,9 +2115,34 @@ function bindPassed() {
     world.style.transform = `translate3d(${x}px, ${y}px, 0)`;
   };
 
+  const phone = () => window.matchMedia("(max-width: 820px)").matches;
+
   const build = () => {
     const list = entries();
     const box = board.getBoundingClientRect();
+    if (phone()) {
+      tile = { w: Math.max(box.width, 1), h: Math.max(box.height, 1) };
+      world.replaceChildren();
+      world.style.transform = "none";
+      const cell = document.createElement("div");
+      cell.className = "passed__tile passed__tile--flow";
+      const seen = new Set();
+      list.forEach((entry) => {
+        const key = entry.nombre.trim().toLowerCase();
+        if (!key || seen.has(key)) return;
+        seen.add(key);
+        const word = document.createElement("button");
+        word.type = "button";
+        word.className = "passed__word";
+        word.textContent = entry.nombre;
+        word.dataset.nombre = entry.nombre;
+        word.dataset.maps = entry.maps;
+        word.dataset.comida = entry.comida;
+        cell.append(word);
+      });
+      world.append(cell);
+      return;
+    }
     const tileW = Math.max(Math.ceil(box.width * 1.7), 1280);
     const tileH = Math.max(Math.ceil(box.height * 1.7), 820);
     tile = { w: tileW, h: tileH };
@@ -2133,6 +2272,10 @@ function bindPassed() {
   };
 
   const place = () => {
+    if (phone()) {
+      build();
+      return;
+    }
     if (!world.childElementCount) build();
     if (!placed) {
       const box = board.getBoundingClientRect();
@@ -2148,7 +2291,13 @@ function bindPassed() {
   window.placePassed = place;
 
   let drag = null;
+  board.addEventListener("click", (e) => {
+    if (!phone()) return;
+    const word = e.target.closest(".passed__word");
+    if (word) openNote(word);
+  });
   board.addEventListener("pointerdown", (e) => {
+    if (phone()) return;
     if (e.button !== 0) return;
     e.preventDefault();
     mode = "drag";
@@ -2193,7 +2342,7 @@ function bindPassed() {
   let wheelTimer = 0;
   let wheelStamp = 0;
   board.addEventListener("wheel", (e) => {
-    if (!screenOn()) return;
+    if (phone() || !screenOn()) return;
     e.preventDefault();
     if (e.ctrlKey || drag) return;
     const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? board.clientHeight : 1;
@@ -2260,7 +2409,7 @@ function bindPassed() {
       form.dataset.sending = "";
       if (!ok) {
         if (send) {
-          const fail = passedLang === "en" ? "Not saved" : "No se guardó";
+          const fail = t("notSaved");
           send.textContent = fail;
           window.setTimeout(() => { if (send.textContent === fail) paintForm(); }, 1600);
         }
@@ -2276,6 +2425,7 @@ function bindPassed() {
     });
     form.addEventListener("input", (e) => {
       hideHint();
+      if (e.target?.name === "nombre") syncMaps();
       if (e.target?.name === "comida") fitFood();
     });
     form.querySelector(".passed-form__hint-site")?.addEventListener("click", (e) => {
@@ -2283,19 +2433,15 @@ function bindPassed() {
     });
   }
 
-  $$("[data-passed-lang]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const next = btn.dataset.passedLang === "en" ? "en" : "es";
-      if (next === passedLang) return;
-      passedLang = next;
-      localStorage.setItem("cookz-passed-lang", passedLang);
-      paintForm();
-      hideNote();
-      if (!screenOn()) return;
-      build();
-      paint();
-    });
-  });
+  window.setPassedLang = (lang) => {
+    const next = lang === "en" ? "en" : "es";
+    passedLang = next;
+    paintForm();
+    hideNote();
+    if (!screenOn()) return;
+    build();
+    paint();
+  };
   const uploadLocal = async () => {
     const notes = localNotes().filter((item) => item?.nombre && item?.comida && item?.maps);
     if (!notes.length) return;
@@ -2353,6 +2499,20 @@ function apply() {
     }
   }
   const caseOpen = current === "cookz" && (lienzoZoom === "in" || lienzoReturn);
+  if (!caseOpen) {
+    const cookzFrameEl = document.querySelector('.frame[data-screen="cookz"]');
+    if (cookzFrameEl?.classList.contains("is-case-zoom")) {
+      cookzFrameEl.getAnimations().forEach((anim) => anim.cancel());
+      cookzFrameEl.style.transform = "";
+      cookzFrameEl.style.opacity = "";
+      cookzFrameEl.classList.remove("is-case-zoom", "is-case-set", "is-case-ready", "is-case-cut");
+      dropLienzoCover();
+      lienzoZoom = null;
+      lienzoReturn = false;
+      const back = cookzFrameEl.querySelector(".back--cookz");
+      if (back) back.dataset.goto = "japan2026";
+    }
+  }
   if (caseOpen && lienzoZoom === "in") primeCaseZoom(lienzoCase);
   show(caseOpen ? "cookz" : current === "cookz" ? "lienzo" : current);
   if (current === "cookz" && !caseOpen) placeLienzo();
@@ -2420,7 +2580,8 @@ function createTicketCard(ticket) {
   const media = document.createElement("div");
   media.className = "t-card__media";
   const img = document.createElement("img");
-  img.src = ticket.src;
+  if (phoneMedia() && !location.hash.includes("tickets-all")) img.dataset.defer = ticket.src;
+  else useSrc(img, ticket.src);
   img.alt = ticket.ktId || "Ticket";
   img.loading = "lazy";
   media.append(img);
@@ -2489,7 +2650,8 @@ function layoutTickets({ reorder = false, force = false } = {}) {
   if (!TICKETS.length) return;
   const gap = parseFloat(getComputedStyle(track).columnGap) || 24;
   const width = track.clientWidth;
-  const cols = Math.max(1, Math.floor((width + gap) / (TICKET_MIN + gap)));
+  const phone = window.matchMedia("(max-width: 820px)").matches;
+  const cols = phone ? 3 : Math.max(1, Math.floor((width + gap) / (TICKET_MIN + gap)));
   const sorted = getSortedTickets();
   const orderKey = sorted.map((t) => t.ktId).join("|");
   const layoutKey = `${cols}|${orderKey}|${ticketSort}`;
@@ -2515,6 +2677,11 @@ function layoutTickets({ reorder = false, force = false } = {}) {
     const card = createTicketCard(ticket);
     card.style.order = String(index);
     track.append(card);
+    if (index < 9) {
+      const shot = card.querySelector("img");
+      if (shot) shot.loading = "eager";
+      trackMedia("tickets", shot);
+    }
   });
 }
 
@@ -2530,7 +2697,7 @@ function buildFavos() {
     mark.className = "favos-mark";
     mark.alt = "";
     mark.draggable = false;
-    mark.src = item.icon;
+    mark.dataset.src = item.icon;
     btn.setAttribute("aria-label", item.label);
     btn.append(mark);
     btn.addEventListener("click", () => {
@@ -2660,6 +2827,56 @@ function applyJapanTransform() {
   local = ((local % w) + w) % w;
   track.style.transform = `translate3d(${-(start + local)}px, 0, 0)`;
   syncJapanLogo();
+  syncJapanMark();
+}
+
+let japanMarkPhase = 1;
+let japanMarkRaf = 0;
+
+function japanFocusPhase() {
+  const rail = document.getElementById("j-window");
+  const track = rail?.querySelector(".j-track");
+  const cookz = track?.querySelector(".j-card--cookz:not([aria-hidden])");
+  if (!rail || !cookz || !japanSetWidth) return japanMarkPhase;
+  const w = japanSetWidth;
+  const start = japanLoopStart;
+  const local = ((japanPosition - start) % w + w) % w;
+  const center = start + local + rail.clientWidth / 2;
+  const cookzCenter = cookz.offsetLeft + cookz.offsetWidth / 2;
+  return (center - cookzCenter) / (w / 3);
+}
+
+function syncJapanMark() {
+  const mark = document.querySelector(".j-mark");
+  if (!mark || !japanSetWidth) return;
+  if (!window.matchMedia("(max-width: 820px)").matches) return;
+  let dest = japanFocusPhase();
+  while (dest - japanMarkPhase > 1.5) dest -= 3;
+  while (japanMarkPhase - dest > 1.5) dest += 3;
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  japanMarkPhase = reduce ? dest : japanMarkPhase + (dest - japanMarkPhase) * 0.28;
+  if (Math.abs(dest - japanMarkPhase) < 0.004) japanMarkPhase = dest;
+  const trackW = mark.clientWidth;
+  const dashW = trackW * 0.22;
+  const travel = Math.max(0, trackW - dashW);
+  const step = travel / 2;
+  const cycle = step * 3;
+  const phase = ((japanMarkPhase % 3) + 3) % 3;
+  const x = phase * step;
+  const stretch = reduce ? 1 : 1 + Math.min(0.9, Math.abs(japanVelocity) / 16);
+  const origin = japanVelocity >= 0 ? "left center" : "right center";
+  mark.querySelectorAll(".j-mark__dash").forEach((dash, i) => {
+    const shift = i === 0 ? 0 : -cycle;
+    dash.style.transformOrigin = origin;
+    dash.style.transform = `translate3d(${(x + shift).toFixed(1)}px, 0, 0) scaleX(${stretch.toFixed(3)})`;
+  });
+  const drifting = Math.abs(dest - japanMarkPhase) > 0.004 || Math.abs(japanVelocity) > 0.06;
+  if (drifting && !japanMarkRaf) {
+    japanMarkRaf = requestAnimationFrame(() => {
+      japanMarkRaf = 0;
+      syncJapanMark();
+    });
+  }
 }
 
 function syncJapanLogo() {
@@ -2765,23 +2982,26 @@ function initJapanMotion() {
 
   japan.addEventListener("wheel", onJapanWheel, { passive: false });
 
-  rail.addEventListener(
+  japan.addEventListener(
     "pointerdown",
     (e) => {
       if (e.button !== 0) return;
-      if (e.target.closest(".j-card")) return;
+      if (e.target.closest("a:not(.j-card), button, input, select, textarea, label")) return;
+      const touch = e.pointerType === "touch" || window.matchMedia("(max-width: 820px)").matches;
+      if (!touch && !e.target.closest("#j-window")) return;
+      if (!touch && e.target.closest(".j-card")) return;
       japanPointerDown = true;
       japanDragDistance = 0;
       japanPointerLastX = e.clientX;
       japanPointerVel = 0;
       japanVelocity = 0;
       rail.classList.add("is-dragging");
-      rail.setPointerCapture(e.pointerId);
+      try { japan.setPointerCapture(e.pointerId); } catch { /* pointer already gone */ }
     },
     { passive: true },
   );
 
-  rail.addEventListener(
+  japan.addEventListener(
     "pointermove",
     (e) => {
       if (!japanPointerDown) return;
@@ -2799,12 +3019,12 @@ function initJapanMotion() {
     if (!japanPointerDown) return;
     japanPointerDown = false;
     rail.classList.remove("is-dragging");
-    if (e.pointerId) rail.releasePointerCapture(e.pointerId);
+    try { japan.releasePointerCapture(e.pointerId); } catch { /* already released */ }
     japanVelocity = japanPointerVel * 0.85;
     japanKickInertia();
   };
-  rail.addEventListener("pointerup", endDrag);
-  rail.addEventListener("pointercancel", endDrag);
+  japan.addEventListener("pointerup", endDrag);
+  japan.addEventListener("pointercancel", endDrag);
 
   track.querySelectorAll(".j-card").forEach((card) => {
     card.addEventListener(
@@ -2892,17 +3112,39 @@ function layoutJapan() {
   applyJapanTransform();
 }
 
+function manifestStoreKey(lang) {
+  return `cookz-manifest-html-${lang === "en" ? "en" : "es"}`;
+}
+
+function loadManifest(lang) {
+  const el = $("#manifest-copy");
+  if (!el) return;
+  const next = lang === "en" ? "en" : "es";
+  if (manifestShown && manifestShown !== next) {
+    localStorage.setItem(manifestStoreKey(manifestShown), cleanManifest(el.innerHTML));
+  }
+  const saved = localStorage.getItem(manifestStoreKey(next));
+  const legacy = next === "es" ? localStorage.getItem("cookz-manifest-html") : "";
+  const fallback = window.COOKZ_COPY?.[next]?.manifestHtml || "";
+  if (saved) el.innerHTML = saved;
+  else if (legacy) el.innerHTML = legacy;
+  else if (fallback) el.innerHTML = fallback;
+  el.lang = next;
+  const aria = t("manifestAria");
+  const placeholder = t("manifestPlaceholder");
+  if (aria) el.setAttribute("aria-label", aria);
+  if (placeholder) el.dataset.placeholder = placeholder;
+  manifestShown = next;
+}
+
 function initManifest() {
   const el = $("#manifest-copy");
   if (!el) return;
-  const key = "cookz-manifest-html";
-  const saved = localStorage.getItem(key);
-  if (saved) el.innerHTML = saved;
 
   const note = $("#manifest-saved");
   const store = () => {
     const html = cleanManifest(el.innerHTML);
-    localStorage.setItem(key, html);
+    localStorage.setItem(manifestStoreKey(manifestShown || siteLang), html);
     if (note) note.hidden = false;
   };
 
@@ -2981,7 +3223,7 @@ function bindTicketRain() {
     const addTicket = (x, y, box, tilt, scale) => {
       const img = document.createElement("img");
       img.className = "k-rain__ticket";
-      img.src = srcs[i % srcs.length];
+      useSrc(img, srcs[i % srcs.length]);
       img.alt = "";
       img.draggable = false;
       const awayX = box.cx >= mcx ? 1 : -1;
@@ -3083,6 +3325,7 @@ function bindFavosFilm() {
   const arrive = () => {
     if (!Number.isFinite(video.duration)) {
       view.classList.add("is-arrived");
+      if (view.classList.contains("is-on")) window.favosBottle?.setActive(true);
       return;
     }
     holding = true;
@@ -3092,6 +3335,7 @@ function bindFavosFilm() {
     video.pause();
     if (video.currentTime < last) video.currentTime = last;
     view.classList.add("is-arrived");
+    if (view.classList.contains("is-on")) window.favosBottle?.setActive(true);
   };
 
   const holdLast = () => {
@@ -3106,6 +3350,7 @@ function bindFavosFilm() {
     if (view.classList.contains("is-on")) {
       frame.classList.add("is-film");
       view.classList.add("is-arrived");
+      window.favosBottle?.setActive(true);
     }
   };
 
@@ -3113,7 +3358,10 @@ function bindFavosFilm() {
     if (video.duration && video.currentTime >= video.duration - 0.12) holdLast();
   });
   video.addEventListener("ended", holdLast);
-  video.addEventListener("error", () => view.classList.add("is-arrived"));
+  video.addEventListener("error", () => {
+    view.classList.add("is-arrived");
+    if (view.classList.contains("is-on")) window.favosBottle?.setActive(true);
+  });
 
   const play = () => {
     if (riding || holding || view.classList.contains("is-on")) return;
@@ -3142,7 +3390,16 @@ function bindFavosFilm() {
     }
   };
 
+  const ensureSrc = () => {
+    const pending = video.getAttribute("data-src");
+    if (!pending) return;
+    video.removeAttribute("data-src");
+    video.preload = "auto";
+    video.src = pending;
+  };
+
   const begin = () => {
+    ensureSrc();
     frame.classList.add("is-film");
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       riding = true;
@@ -3162,6 +3419,7 @@ function bindFavosFilm() {
   document.querySelectorAll('a[href="#/konbini/favos"]').forEach((link) => {
     link.addEventListener("click", begin);
   });
+  window.playFavosTrain = begin;
 
   window.syncFavosRide = (on) => {
     if (!on) {
@@ -3215,13 +3473,21 @@ function placeHomeFace(img) {
   if (!face || !img.naturalWidth) return;
   const rush = img.parentElement.getBoundingClientRect();
   const plate = document.querySelector(".home__plate");
-  if (!plate) return;
+  if (!plate || rush.width < 1 || rush.height < 1) return;
   const box = plate.getBoundingClientRect();
   const ovalW = box.width * 0.72;
   const ovalH = box.height * 0.7;
   const cx = box.left + box.width / 2 - rush.left;
   const cy = box.top + box.height / 2 - rush.top;
-  const scale = Math.max(ovalW / (face.w * img.naturalWidth), ovalH / (face.h * img.naturalHeight));
+  const fx = Math.min(Math.max(face.x, 0.04), 0.96);
+  const fy = Math.min(Math.max(face.y, 0.04), 0.96);
+  const faceScale = Math.max(
+    ovalW / (face.w * img.naturalWidth),
+    ovalH / (face.h * img.naturalHeight)
+  );
+  const coverW = Math.max(cx / fx, (rush.width - cx) / (1 - fx));
+  const coverH = Math.max(cy / fy, (rush.height - cy) / (1 - fy));
+  const scale = Math.max(faceScale, (coverW + 8) / img.naturalWidth, (coverH + 8) / img.naturalHeight);
   const dw = img.naturalWidth * scale;
   const dh = img.naturalHeight * scale;
   img.style.width = `${dw}px`;
@@ -3251,9 +3517,8 @@ function startHomeFlash() {
     const done = (ok) => ready.set(src, ok);
     img.onload = () => done(true);
     img.onerror = () => done(false);
-    img.src = src;
-    if (img.complete && img.naturalWidth) done(true);
-    else if (img.complete) done(false);
+    useSrc(img, src);
+    if (img.src && img.complete) done(!!img.naturalWidth);
   };
 
   const a = document.createElement("img");
@@ -3269,13 +3534,13 @@ function startHomeFlash() {
   let cursor = 0;
   let shown = a;
   let hidden = b;
-  const ahead = 4;
+  const ahead = phoneMedia() ? 2 : 4;
   const arm = () => {
     for (let n = 0; n < ahead; n += 1) warm(shots[(cursor + n) % shots.length]);
   };
   const showShot = (img, shot) => {
     img._face = shot;
-    if (img.getAttribute("src") !== shot.src) img.src = shot.src;
+    if (img.dataset.full !== shot.src) useSrc(img, shot.src);
     placeHomeFace(img);
   };
   arm();
@@ -3327,9 +3592,9 @@ function startHomeFlash() {
     const upcoming = shots[cursor];
     warm(upcoming);
     warm(shots[(cursor + 1) % shots.length]);
-    if (ready.get(upcoming.src) && hidden.getAttribute("src") !== upcoming.src) {
+    if (ready.get(upcoming.src) && hidden.dataset.full !== upcoming.src) {
       hidden._face = upcoming;
-      hidden.src = upcoming.src;
+      useSrc(hidden, upcoming.src);
     }
     window.setTimeout(step, beat);
   };
@@ -3534,6 +3799,205 @@ function bindPagePeel() {
   });
 }
 
+const screenBags = new Map();
+
+function screenBag(key) {
+  let bag = screenBags.get(key);
+  if (!bag) screenBags.set(key, (bag = new Map()));
+  return bag;
+}
+
+function paintLoad(key) {
+  const frameName = key === "tickets" ? "konbini" : key;
+  const frame = document.querySelector(`.frame[data-screen="${frameName}"]`);
+  const host = key === "tickets" ? document.querySelector('.view[data-kview="tickets-all"]') : frame;
+  if (!host) return;
+  let label = host.querySelector(":scope > .screen-load");
+  if (!label) {
+    label = document.createElement("p");
+    label.className = "screen-load";
+    host.append(label);
+  }
+  const bag = screenBags.get(key);
+  if (!bag || !bag.size) {
+    host.classList.remove("is-loading");
+    label.textContent = "";
+    return;
+  }
+  const total = bag.size;
+  const ok = [...bag.values()].filter((v) => v === "ok").length;
+  host.classList.toggle("is-loading", ok < total);
+  label.textContent = ok < total ? `${t("loading")} ${ok}/${total}` : "";
+}
+
+function noteUrl(key, url, el) {
+  if (!key || key === "home" || !url) return;
+  if (el?.tagName === "VIDEO") return;
+  const bag = screenBag(key);
+  if (bag.get(url) === "ok") return;
+  bag.set(url, "wait");
+  const finish = () => {
+    if (bag.get(url) === "ok") return;
+    bag.set(url, "ok");
+    paintLoad(key);
+  };
+  if (el) {
+    if (el.tagName === "VIDEO") el.addEventListener("loadeddata", finish, { once: true });
+    else el.addEventListener("load", finish, { once: true });
+    el.addEventListener("error", finish, { once: true });
+    if (el.tagName !== "VIDEO" && el.complete && el.naturalWidth) finish();
+  }
+  paintLoad(key);
+}
+
+function trackMedia(key, el) {
+  if (!el) return;
+  noteUrl(key, el.getAttribute("src") || el.currentSrc || "", el);
+}
+
+function phoneMedia() {
+  return window.matchMedia("(max-width: 820px)").matches;
+}
+
+function phoneSrc(url) {
+  if (!url || !phoneMedia()) return url;
+  const cut = url.indexOf("?");
+  const path = cut >= 0 ? url.slice(0, cut) : url;
+  const query = cut >= 0 ? url.slice(cut) : "";
+  const hit = window.COOKZ_MOBILE?.[path];
+  return hit ? hit + query : url;
+}
+
+const MEDIA_BATCH = 4;
+let mediaActive = 0;
+const mediaQueue = [];
+
+function pumpMedia() {
+  while (mediaActive < MEDIA_BATCH && mediaQueue.length) {
+    const job = mediaQueue.shift();
+    if (!job.el.isConnected && job.el.tagName === "IMG" && !job.el.ownerDocument) continue;
+    mediaActive += 1;
+    let settled = false;
+    const done = () => {
+      if (settled) return;
+      settled = true;
+      mediaActive = Math.max(0, mediaActive - 1);
+      job.el.removeEventListener("load", done);
+      job.el.removeEventListener("error", done);
+      pumpMedia();
+    };
+    job.el.addEventListener("load", done);
+    job.el.addEventListener("error", done);
+    job.el.src = job.url;
+    if (job.el.complete && (job.el.naturalWidth || job.el.tagName === "VIDEO")) done();
+  }
+}
+
+function showCookzImg(img, src) {
+  if (img.dataset.full === src && img.complete && img.naturalWidth) {
+    img.classList.remove("is-pending");
+    return;
+  }
+  for (let i = mediaQueue.length - 1; i >= 0; i -= 1) {
+    if (mediaQueue[i].el === img) mediaQueue.splice(i, 1);
+  }
+  delete img.dataset.queued;
+  img.classList.add("is-pending");
+  const reveal = () => {
+    if (img.dataset.full !== src) return;
+    img.classList.remove("is-pending");
+  };
+  img.addEventListener("load", reveal, { once: true });
+  useSrc(img, src, true);
+  if (img.complete && img.naturalWidth) reveal();
+}
+
+let cookzWarmToken = 0;
+function warmCookzHovers() {
+  const token = ++cookzWarmToken;
+  if (!phoneMedia()) return;
+  const urls = VENUES.map((venue) => venue.hover).filter(Boolean);
+  let index = 0;
+  let active = 0;
+  const pump = () => {
+    if (token !== cookzWarmToken) return;
+    while (active < 2 && index < urls.length) {
+      const url = phoneSrc(urls[index]);
+      index += 1;
+      const img = new Image();
+      active += 1;
+      const done = () => {
+        active -= 1;
+        pump();
+      };
+      img.onload = done;
+      img.onerror = done;
+      img.src = url;
+    }
+  };
+  window.setTimeout(pump, 350);
+}
+
+function useSrc(el, url, now = false) {
+  if (!el || !url) return;
+  const next = el.tagName === "VIDEO" ? url : phoneSrc(url);
+  el.dataset.full = url;
+  if (now || !phoneMedia() || el.tagName === "VIDEO") {
+    el.src = next;
+    return;
+  }
+  if (el.dataset.queued === next) return;
+  el.dataset.queued = next;
+  mediaQueue.push({ el, url: next });
+  pumpMedia();
+}
+
+function releaseScreen(key) {
+  if (!key || key === "home" || key === "tickets") return;
+  const phone = phoneMedia();
+  document.querySelectorAll(`.frame[data-screen="${key}"] [data-src]`).forEach((el) => {
+    const src = el.getAttribute("data-src");
+    if (!src) return;
+    if (phone && key === "konbini") {
+      const onFavos = el.id === "k-film-frame" || el.closest('[data-kview="favos"]');
+      const onTracker = el.closest('[data-kview="tracker"]');
+      if (onFavos && konbiniView !== "favos") return;
+      if (onTracker && konbiniView !== "tracker" && konbiniView !== "stats") return;
+    }
+    el.removeAttribute("data-src");
+    if (el.tagName === "VIDEO") el.preload = phone ? "metadata" : "auto";
+    noteUrl(key, src, el);
+    if (el.tagName === "VIDEO") el.src = src;
+    else useSrc(el, src);
+    if (el.tagName !== "VIDEO" && el.complete && el.naturalWidth) {
+      el.dispatchEvent(new Event("load"));
+    }
+    if (el.tagName === "VIDEO" && el.hasAttribute("autoplay")) el.play?.().catch(() => {});
+    if (el.closest(".j-card")) {
+      el.addEventListener(el.tagName === "VIDEO" ? "loadeddata" : "load", () => layoutJapan(), { once: true });
+    }
+  });
+}
+
+function scheduleLoads() {
+  if (phoneMedia()) return;
+  const now = (location.hash || "").replace(/^#\/?/, "").split("/")[0] || "home";
+  const first = now === "cookz" ? "lienzo" : now;
+  const all = ["japan2026", "lienzo", "manifest", "passed-along", "konbini"];
+  const queue = [];
+  if (first && first !== "home") queue.push(first);
+  all.forEach((name) => {
+    if (!queue.includes(name)) queue.push(name);
+  });
+  const run = () => {
+    const next = queue.shift();
+    if (!next) return;
+    releaseScreen(next);
+    window.setTimeout(run, 180);
+  };
+  window.setTimeout(run, !now || now === "home" ? 600 : 0);
+}
+
 function init() {
   buildCookzList($("#venue-list"));
   bindPassed();
@@ -3551,8 +4015,17 @@ function init() {
   buildFavos();
   initManifest();
 
-  $$("[data-ticket-lang]").forEach((btn) => {
-    btn.addEventListener("click", () => setTicketLang(btn.dataset.ticketLang));
+  $$("[data-gate-lang]").forEach((btn) => {
+    btn.addEventListener("click", () => applySiteLang(btn.dataset.gateLang));
+  });
+  if (readLangCookie()) applySiteLang(siteLang, { rebuild: false });
+  else applySiteLang("es", { rebuild: false, save: false });
+  $("#site-tree")?.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-tree]");
+    if (!btn) return;
+    if (btn.dataset.tree === "konbini" && btn.dataset.extra === "favos") window.playFavosTrain?.();
+    $("#site-tree").hidden = true;
+    go(btn.dataset.tree, btn.dataset.extra || "");
   });
   syncTicketSortUi();
   $$("[data-ticket-sort]").forEach((btn) => {
@@ -3595,15 +4068,30 @@ function init() {
   }
 
   document.addEventListener("click", (e) => {
+    const tree = $("#site-tree");
+    const logoLink = e.target.closest("a");
+    const onLogo = !!(logoLink && logoLink.querySelector(".logo"));
+    if (onLogo && window.matchMedia("(min-width: 821px)").matches) {
+      e.preventDefault();
+      const open = tree && !tree.hidden;
+      if (tree) tree.hidden = open;
+      if (!open) paintSiteTree();
+      return;
+    }
+    if (tree && !tree.hidden && !tree.contains(e.target)) tree.hidden = true;
     const hit = e.target.closest("[data-goto]");
     if (!hit) return;
     if (hit.closest(".j-card") && japanDragDistance > 10) return;
-    if (hit.classList.contains("back--cookz") && lienzoReturn) {
+    if (lienzoReturn && hit.closest('.frame[data-screen="cookz"]')) {
       e.preventDefault();
-      shrinkLienzoCase();
+      const dest = hit.dataset.goto || "japan2026";
+      const extra = hit.dataset.extra || "";
+      if (hit.classList.contains("back--cookz")) shrinkLienzoCase();
+      else shrinkLienzoCase(extra ? `${dest}/${extra}` : dest);
       return;
     }
     e.preventDefault();
+    if (hit.dataset.goto === "konbini" && hit.dataset.extra === "favos") window.playFavosTrain?.();
     go(hit.dataset.goto, hit.dataset.extra || "");
   });
 
@@ -3624,8 +4112,26 @@ function init() {
     layoutTickets({ force: true });
     layoutJapan();
   });
+  const ticketTrack = $("#t-track");
+  if (ticketTrack) {
+    ticketTrack.addEventListener("click", (e) => {
+      if (!window.matchMedia("(max-width: 820px)").matches) return;
+      const card = e.target.closest(".t-card");
+      if (!card) return;
+      const was = card.classList.contains("is-open");
+      ticketTrack.querySelectorAll(".t-card.is-open").forEach((el) => el.classList.remove("is-open"));
+      if (!was) card.classList.add("is-open");
+      e.stopPropagation();
+    });
+  }
+  document.addEventListener("click", (e) => {
+    if (e.target.closest(".t-card")) return;
+    document.querySelectorAll(".t-card.is-open").forEach((el) => el.classList.remove("is-open"));
+  });
+
   if (!location.hash) location.hash = "/home";
   apply();
+  scheduleLoads();
 }
 
 init();
