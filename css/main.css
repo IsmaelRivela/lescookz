@@ -745,7 +745,7 @@ body:has(.frame[data-screen="home"].is-on) .home__diary {
   margin: 0;
   padding-right: 1.5vw;
   overflow: auto;
-  font-size: clamp(16px, 1.18vw, 20px);
+  font-size: clamp(calc(16px + 2pt), calc(1.18vw + 2pt), calc(20px + 2pt));
   font-weight: 400;
   line-height: 1.5;
   text-align: justify;

@@ -334,7 +334,7 @@
     overflow: visible;
     flex: none;
     padding-right: 0;
-    font-size: clamp(17px, 4.25vw, 20px);
+    font-size: clamp(calc(17px + 2pt), calc(4.25vw + 2pt), calc(20px + 2pt));
     line-height: 1.52;
     text-align: justify;
     text-align-last: left;
