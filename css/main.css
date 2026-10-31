@@ -2379,10 +2379,10 @@ body:has(a.logo-link--cookz) .frame[data-screen="lienzo"] > a:has(.logo) {
   margin: 0;
   padding: 0.25em 0.35em 0.4em;
   border: 0;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.22);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
   border-radius: 0;
   background: transparent;
-  color: #000;
+  color: rgba(0, 0, 0, 0.42);
   font: inherit;
   font-size: clamp(16px, 1.08vw, 22px);
   font-weight: 700;
@@ -2405,8 +2405,8 @@ body:has(a.logo-link--cookz) .frame[data-screen="lienzo"] > a:has(.logo) {
   transform: rotate(180deg);
 }
 .passed-city-bar__drop.is-open .passed-city-bar__trigger {
-  color: var(--red);
-  border-bottom-color: rgba(220, 20, 60, 0.35);
+  color: rgba(0, 0, 0, 0.42);
+  border-bottom-color: rgba(0, 0, 0, 0.18);
 }
 .passed-city-bar__trigger:focus {
   outline: none;
@@ -2661,7 +2661,7 @@ body:has(a.logo-link--cookz) .frame[data-screen="lienzo"] > a:has(.logo) {
 .passed-form__parsed[hidden] { display: none; }
 .passed-form__maps {
   display: inline-block;
-  margin: 0 0 0.25em;
+  margin: 0 0 0.85em;
   color: var(--red);
   font-size: var(--passed-meta);
   font-weight: var(--passed-w-strong);

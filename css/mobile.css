@@ -342,12 +342,21 @@
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
   }
+  .frame[data-screen="passed-along"] > a .logo {
+    left: 50%;
+    right: auto;
+    top: calc(env(safe-area-inset-top, 0px) + 2.35rem);
+    transform: translateX(-50%);
+    width: min(38vw, 118px);
+    z-index: 12;
+  }
   .frame[data-screen="passed-along"] .passed-shell {
     display: flex;
     flex-direction: column;
     flex: 1 1 auto;
     min-height: 0;
     height: auto;
+    padding-top: calc(env(safe-area-inset-top, 0px) + 7.25rem);
   }
   .frame[data-screen="passed-along"] .passed-side {
     order: 2;
@@ -362,6 +371,70 @@
   .frame[data-screen="passed-along"] .passed-form {
     width: 100%;
     max-width: none;
+  }
+  .frame[data-screen="passed-along"] .passed.passed--mobile-list {
+    position: relative;
+    order: 1;
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    max-height: min(46vh, 26rem);
+    flex-shrink: 0;
+    min-height: 12rem;
+    padding: 0;
+    overflow: hidden;
+    touch-action: auto;
+    cursor: default;
+    background: #fff;
+  }
+  .frame[data-screen="passed-along"] .passed--mobile-list .passed__stage {
+    position: relative;
+    inset: auto;
+    flex: 1 1 auto;
+    min-height: 0;
+    height: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .frame[data-screen="passed-along"] .passed--mobile-list .passed__world {
+    position: relative;
+    left: auto;
+    top: auto;
+    transform: none !important;
+  }
+  .frame[data-screen="passed-along"] .passed--mobile-list .passed__fade {
+    display: none;
+  }
+  .frame[data-screen="passed-along"] .passed--mobile-list .passed-city-bar {
+    position: relative;
+    bottom: auto;
+    left: 50%;
+    transform: translateX(-50%);
+    flex-shrink: 0;
+    z-index: 6;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 0.65rem 6vw 0.85rem;
+    background: #fff;
+  }
+  .frame[data-screen="passed-along"] .passed--mobile-list .passed-city-bar__drop {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+  }
+  .frame[data-screen="passed-along"] .passed--mobile-list .passed-city-bar__trigger {
+    min-width: 0;
+    color: rgba(0, 0, 0, 0.72);
+    font-size: clamp(13px, 3.5vw, 15px);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    border-bottom-color: rgba(0, 0, 0, 0.12);
+  }
+  .frame[data-screen="passed-along"] .passed--mobile-list .passed-city-bar__drop.is-open .passed-city-bar__trigger {
+    color: rgba(0, 0, 0, 0.72);
+    border-bottom-color: rgba(0, 0, 0, 0.18);
   }
   .frame[data-screen="passed-along"] .passed {
     position: relative;
@@ -386,6 +459,7 @@
   .frame[data-screen="passed-along"] .passed-city-bar__trigger {
     min-width: min(11rem, 62vw);
     font-size: clamp(17px, 4.2vw, 22px);
+    color: rgba(0, 0, 0, 0.72);
   }
   .frame[data-screen="passed-along"] .passed-city-bar__option {
     font-size: clamp(16px, 3.8vw, 20px);
@@ -393,6 +467,49 @@
   .frame[data-screen="passed-along"] .passed-side__title {
     font-size: clamp(48px, 16vw, 112px);
     margin-bottom: 1.1rem;
+  }
+  .passed__tile--flow.passed__tile--grid {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    margin: 0;
+    padding: 0.15rem 6vw 1rem;
+    background: transparent;
+    border: 0;
+  }
+  .passed__tile--grid .passed__word {
+    position: static;
+    left: auto;
+    top: auto;
+    display: block;
+    width: 100%;
+    min-height: 0;
+    aspect-ratio: auto;
+    margin: 0;
+    padding: 0.4rem 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: rgba(0, 0, 0, 0.72);
+    opacity: 1;
+    font-size: clamp(13px, 3.5vw, 15px);
+    font-weight: 700;
+    line-height: 1.35;
+    letter-spacing: -0.02em;
+    text-align: justify;
+    text-align-last: left;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: normal;
+    hyphens: auto;
+    cursor: pointer;
+  }
+  .passed__tile--grid .passed__word:active,
+  .passed__tile--grid .passed__word:focus-visible {
+    color: var(--red);
+  }
+  .passed__tile--grid .passed__word.is-filtered-out {
+    display: none;
   }
   .passed__tile--flow {
     position: relative;

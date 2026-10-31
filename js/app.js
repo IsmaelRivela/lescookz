@@ -2218,7 +2218,6 @@ function bindPassed() {
     },
   };
   let passedLang = siteLang === "en" ? "en" : "es";
-  let passedFormMode = "auto";
   let autoDraft = null;
   let parseTimer = 0;
   let passedCityFilter = "";
@@ -2380,8 +2379,6 @@ function bindPassed() {
     if (city) return city;
     return copy().geoHere || "Here";
   };
-  const mapsLinkFromCoords = (lat, lon) =>
-    `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${lat},${lon}`)}`;
   const reversePhotonAt = async (lat, lon) => {
     try {
       const res = await fetch(
@@ -2393,86 +2390,6 @@ function bindPassed() {
       return p || null;
     } catch {
       return null;
-    }
-  };
-  const placeFromCoords = async (lat, lon) => {
-    const p = await reversePhotonAt(lat, lon);
-    const maps = mapsLinkFromCoords(lat, lon);
-    if (!p) {
-      return {
-        nombre: copy().geoHere || "Here",
-        city: "",
-        maps,
-      };
-    }
-    if (p.countrycode && p.countrycode !== "JP") return { error: "japan" };
-    return {
-      nombre: nameFromPhoton(p),
-      city: cityFromFeature(p),
-      maps,
-    };
-  };
-  const readGeolocation = () =>
-    new Promise((resolve, reject) => {
-      if (!navigator.geolocation) {
-        reject(new Error("unsupported"));
-        return;
-      }
-      navigator.geolocation.getCurrentPosition(
-        (pos) => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
-        (err) => reject(err),
-        { enableHighAccuracy: true, timeout: 14000, maximumAge: 45000 },
-      );
-    });
-  const applyPlaceToForm = (place) => {
-    if (passedFormMode === "auto") {
-      const input = form?.querySelector('[name="maps_auto"]');
-      if (input) input.value = place.maps;
-      autoDraft = place;
-      const el = document.getElementById("passed-parsed");
-      if (el) {
-        const bit = [place.nombre, place.city].filter(Boolean).join(" · ");
-        el.textContent = `${copy().parsed}: ${bit}`;
-        el.hidden = false;
-      }
-    } else {
-      const nombre = form?.querySelector('[name="nombre"]');
-      const ciudad = form?.querySelector('[name="ciudad"]');
-      const manualMaps = form?.querySelector('[name="maps_manual"]');
-      if (nombre) nombre.value = place.nombre;
-      if (ciudad) ciudad.value = place.city || "";
-      if (manualMaps) manualMaps.value = place.maps;
-    }
-    syncMaps();
-  };
-  const fillFromCurrentLocation = async () => {
-    const btn = document.getElementById("passed-geo");
-    const idle = copy().geoBtn;
-    hideHint();
-    if (btn) {
-      btn.disabled = true;
-      btn.textContent = copy().geoBusy;
-    }
-    try {
-      const { lat, lon } = await readGeolocation();
-      const place = await placeFromCoords(lat, lon);
-      if (place?.error) {
-        showHint(place.error);
-        return;
-      }
-      if (!place?.maps) {
-        showHint("geoFail");
-        return;
-      }
-      applyPlaceToForm(place);
-    } catch (err) {
-      const code = err?.code;
-      showHint(code === 1 ? "geoDenied" : "geoFail");
-    } finally {
-      if (btn) {
-        btn.disabled = false;
-        btn.textContent = idle;
-      }
     }
   };
   const placeNameFromLanded = (landed, q) => {
@@ -2562,37 +2479,9 @@ function bindPassed() {
     const field = form?.querySelector('[name="comida"]');
     if (field) field.style.fontSize = "";
   };
-  const setPanelFieldsEnabled = (panel, on) => {
-    if (!panel) return;
-    panel.querySelectorAll("input, textarea, select").forEach((field) => {
-      field.disabled = !on;
-    });
-  };
-  const setPassedMode = (mode) => {
-    passedFormMode = mode === "manual" ? "manual" : "auto";
-    form?.querySelectorAll(".passed-form__mode-btn").forEach((btn) => {
-      btn.classList.toggle("is-on", btn.dataset.passedMode === passedFormMode);
-    });
-    const autoPanel = form?.querySelector('[data-passed-panel="auto"]');
-    const manualPanel = form?.querySelector('[data-passed-panel="manual"]');
-    const autoOn = passedFormMode === "auto";
-    const manualOn = passedFormMode === "manual";
-    if (autoPanel) autoPanel.hidden = !autoOn;
-    if (manualPanel) manualPanel.hidden = !manualOn;
-    setPanelFieldsEnabled(autoPanel, autoOn);
-    setPanelFieldsEnabled(manualPanel, manualOn);
-    const autoMaps = form?.querySelector('[name="maps_auto"]');
-    const manualMaps = form?.querySelector('[name="maps_manual"]');
-    const nombre = form?.querySelector('[name="nombre"]');
-    if (autoMaps) autoMaps.required = autoOn;
-    if (manualMaps) manualMaps.required = manualOn;
-    if (nombre) nombre.required = manualOn;
-    paintParsed();
-  };
   const paintParsed = async () => {
     const el = document.getElementById("passed-parsed");
-    if (!el || passedFormMode !== "auto") {
-      if (el) el.hidden = true;
+    if (!el) {
       autoDraft = null;
       return;
     }
@@ -2600,6 +2489,7 @@ function bindPassed() {
     if (!maps) {
       el.hidden = true;
       autoDraft = null;
+      syncMaps();
       return;
     }
     const parsed = await extractPlaceFromMaps(maps);
@@ -2607,6 +2497,7 @@ function bindPassed() {
     if (!parsed) {
       el.textContent = copy().parsedFail;
       el.hidden = false;
+      syncMaps();
       return;
     }
     const bit = [parsed.nombre, parsed.city].filter(Boolean).join(" · ");
@@ -2618,51 +2509,42 @@ function bindPassed() {
     window.clearTimeout(parseTimer);
     parseTimer = window.setTimeout(() => { paintParsed(); }, 420);
   };
+  const syncMaps = () => {
+    const mapsGo = form?.querySelector(".passed-form__maps");
+    if (!mapsGo) return;
+    const pasted = form?.querySelector('[name="maps_auto"]')?.value.trim();
+    const fromPaste = pasted ? asMapUrl(pasted) : "";
+    if (fromPaste) {
+      mapsGo.href = fromPaste;
+      return;
+    }
+    if (autoDraft?.maps) {
+      mapsGo.href = autoDraft.maps;
+      return;
+    }
+    const nombre = autoDraft?.nombre || "";
+    mapsGo.href = nombre
+      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${nombre} Japan`)}`
+      : "https://www.google.com/maps";
+  };
   const paintForm = () => {
     const text = copy();
-    form?.querySelectorAll(".passed-form__mode-btn").forEach((btn) => {
-      const key = btn.dataset.passedMode === "manual" ? "modeManual" : "modeAuto";
-      btn.textContent = text[key];
-    });
-    const labels = {
-      maps_auto: "labelMaps",
-      nombre: "labelNombre",
-      ciudad: "labelCiudad",
-      maps_manual: "labelUbic",
-    };
-    Object.entries(labels).forEach(([name, key]) => {
-      const field = form?.querySelector(`[name="${name}"]`);
-      const label = field?.closest(".passed-form__field")?.querySelector(".passed-form__label");
-      if (label) label.textContent = text[key];
-    });
-    const shareKicker = form?.querySelector(".passed-form__share .passed-form__label");
-    if (shareKicker) shareKicker.textContent = text.labelShareKicker;
-    const sharePrompt = document.getElementById("passed-share-prompt");
-    if (sharePrompt) sharePrompt.textContent = text.labelShare;
-    const pickLabel = document.getElementById("passed-city-pick-label");
-    if (pickLabel) pickLabel.textContent = text.cityPickLabel;
-    const ph = {
-      maps_auto: "mapsPh",
-      nombre: "nombrePh",
-      ciudad: "ciudadPh",
-      maps_manual: "ubicPh",
-      comida: "sharePh",
-    };
-    Object.entries(ph).forEach(([name, key]) => {
-      const field = form?.querySelector(`[name="${name}"]`);
-      if (field) {
-        field.placeholder = text[key];
-        field.setAttribute("aria-label", text[key]);
-      }
-    });
+    const mapsField = form?.querySelector('[name="maps_auto"]');
+    const mapsLabel = mapsField?.closest(".passed-form__field")?.querySelector(".passed-form__label");
+    if (mapsLabel) mapsLabel.textContent = text.labelMaps;
+    const comida = form?.querySelector('[name="comida"]');
+    if (mapsField) {
+      mapsField.placeholder = text.mapsPh;
+      mapsField.setAttribute("aria-label", text.mapsPh);
+    }
+    if (comida) {
+      comida.placeholder = text.sharePh;
+      comida.setAttribute("aria-label", text.labelShare);
+    }
     const send = form?.querySelector(".passed-form__send");
     if (send) send.textContent = text.send;
     const mapsGo = form?.querySelector(".passed-form__maps");
     if (mapsGo) mapsGo.textContent = text.mapsOpen;
-    const mapsNote = form?.querySelector(".passed-form__maps-note");
-    if (mapsNote) mapsNote.textContent = text.mapsAutoNote;
-    const geoBtn = document.getElementById("passed-geo");
-    if (geoBtn && !geoBtn.disabled) geoBtn.textContent = text.geoBtn;
     const intro = document.getElementById("passed-intro");
     if (intro) intro.textContent = text.intro;
     const titleLines = document.querySelectorAll("#passed-side-title .passed-side__title-line");
@@ -2672,25 +2554,10 @@ function bindPassed() {
     }
     const sideTitle = document.getElementById("passed-side-title");
     if (sideTitle) sideTitle.setAttribute("aria-label", `${text.titleLine1} ${text.titleLine2}`);
-    const japanNote = document.getElementById("passed-japan-note");
-    if (japanNote) japanNote.textContent = text.japanBanner;
-    setPassedMode(passedFormMode);
     syncMaps();
+    paintParsed();
     paintHint();
     fitFood();
-  };
-  const syncMaps = () => {
-    const mapsGo = form?.querySelector(".passed-form__maps");
-    if (!mapsGo) return;
-    let nombre = "";
-    if (passedFormMode === "manual") {
-      nombre = form.querySelector('[name="nombre"]')?.value.trim();
-    } else {
-      nombre = autoDraft?.nombre || "";
-    }
-    mapsGo.href = nombre
-      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${nombre} Japan`)}`
-      : "https://www.google.com/maps";
   };
   const orderOf = (venue) => {
     const source = typeof COOKS !== "undefined" ? COOKS.find((item) => item.id === venue.id) : null;
@@ -2760,41 +2627,6 @@ function bindPassed() {
     });
   };
 
-  const jumpToVenue = (nombre) => {
-    const words = [...board.querySelectorAll(".passed__word")].filter(
-      (w) => w.dataset.nombre === nombre && !w.classList.contains("is-filtered-out"),
-    );
-    const word = words[0];
-    if (!word) return;
-    if (window.matchMedia("(max-width: 820px)").matches) {
-      word.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
-    openNote(word);
-  };
-
-  const paintCityPickList = () => {
-    const wrap = document.getElementById("passed-city-pick");
-    const list = document.getElementById("passed-city-pick-list");
-    if (!wrap || !list) return;
-    if (!passedCityFilter) {
-      wrap.hidden = true;
-      list.replaceChildren();
-      return;
-    }
-    const items = sortByCity(entries()).filter(
-      (entry) => cityKeyNorm(cityForEntry(entry)) === passedCityFilter,
-    );
-    list.replaceChildren();
-    items.forEach((entry) => {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.textContent = entry.nombre;
-      btn.addEventListener("click", () => jumpToVenue(entry.nombre));
-      list.append(btn);
-    });
-    wrap.hidden = items.length === 0;
-  };
-
   const paintCityFilter = () => {
     const bar = document.getElementById("passed-city-bar");
     if (!bar) return;
@@ -2843,7 +2675,6 @@ function bindPassed() {
       });
       setOpen(false);
       applyCityFilter();
-      paintCityPickList();
     };
     options.forEach((opt, index) => {
       const item = document.createElement("li");
@@ -2896,7 +2727,6 @@ function bindPassed() {
   const finishBuild = () => {
     paintCityFilter();
     applyCityFilter();
-    paintCityPickList();
   };
 
   const paint = () => {
@@ -2911,11 +2741,12 @@ function bindPassed() {
     const list = entries();
     const box = board.getBoundingClientRect();
     if (phone()) {
+      board.classList.add("passed--mobile-list");
       tile = { w: Math.max(box.width, 1), h: Math.max(box.height, 1) };
       world.replaceChildren();
       world.style.transform = "none";
       const cell = document.createElement("div");
-      cell.className = "passed__tile passed__tile--flow";
+      cell.className = "passed__tile passed__tile--flow passed__tile--grid";
       const seen = new Set();
       list.forEach((entry) => {
         const key = entry.nombre.trim().toLowerCase();
@@ -2935,6 +2766,7 @@ function bindPassed() {
       finishBuild();
       return;
     }
+    board.classList.remove("passed--mobile-list");
     const tileW = Math.max(Math.ceil(box.width * 1.7), 1280);
     const tileH = Math.max(Math.ceil(box.height * 1.7), 820);
     tile = { w: tileW, h: tileH };
@@ -3176,56 +3008,25 @@ function bindPassed() {
   });
 
   if (form) {
-    form.querySelectorAll(".passed-form__mode-btn").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        setPassedMode(btn.dataset.passedMode);
-      });
-    });
-    document.getElementById("passed-geo")?.addEventListener("click", () => {
-      fillFromCurrentLocation();
-    });
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       if (form.dataset.sending === "1") return;
       hideHint();
       const data = new FormData(form);
       const comida = String(data.get("comida") || "").trim();
-      if (passedFormMode === "auto") {
-        const maps = String(data.get("maps_auto") || "").trim();
-        if (!maps || !comida) {
-          showHint("needFields");
-          if (!maps) form.querySelector('[name="maps_auto"]')?.focus();
-          else form.querySelector('[name="comida"]')?.focus();
-          return;
-        }
-      } else {
-        const nombre = String(data.get("nombre") || "").trim();
-        const maps = String(data.get("maps_manual") || "").trim();
-        if (!nombre || !maps || !comida) {
-          showHint("needFields");
-          if (!nombre) form.querySelector('[name="nombre"]')?.focus();
-          else if (!maps) form.querySelector('[name="maps_manual"]')?.focus();
-          else form.querySelector('[name="comida"]')?.focus();
-          return;
-        }
+      const maps = String(data.get("maps_auto") || "").trim();
+      if (!maps || !comida) {
+        showHint("needFields");
+        if (!maps) form.querySelector('[name="maps_auto"]')?.focus();
+        else form.querySelector('[name="comida"]')?.focus();
+        return;
       }
-      let note;
-      if (passedFormMode === "auto") {
-        const maps = String(data.get("maps_auto") || "").trim();
-        const parsed = autoDraft || await extractPlaceFromMaps(maps);
-        if (!parsed?.nombre) {
-          showHint("linkOnly");
-          return;
-        }
-        note = { nombre: parsed.nombre, maps: parsed.maps, comida, city: parsed.city || "" };
-      } else {
-        note = {
-          nombre: String(data.get("nombre") || "").trim(),
-          maps: String(data.get("maps_manual") || "").trim(),
-          comida,
-          city: String(data.get("ciudad") || "").trim(),
-        };
+      const parsed = autoDraft || await extractPlaceFromMaps(maps);
+      if (!parsed?.nombre) {
+        showHint("linkOnly");
+        return;
       }
+      const note = { nombre: parsed.nombre, maps: parsed.maps, comida, city: parsed.city || "" };
       const existing = matchSite(note.nombre);
       if (existing) {
         showHint("maybe", existing);
@@ -3265,8 +3066,10 @@ function bindPassed() {
     });
     form.addEventListener("input", (e) => {
       hideHint();
-      if (e.target?.name === "nombre") syncMaps();
-      if (e.target?.name === "maps_auto") scheduleParse();
+      if (e.target?.name === "maps_auto") {
+        scheduleParse();
+        syncMaps();
+      }
       if (e.target?.name === "comida") fitFood();
     });
     form.querySelector(".passed-form__hint-site")?.addEventListener("click", (e) => {
@@ -4468,24 +4271,14 @@ function placeHomeFace(img) {
   const scale = Math.max(
     faceScale,
     (coverW + 8) / img.naturalWidth,
-    (coverH + 48) / img.naturalHeight
+    (coverH + 8) / img.naturalHeight,
   );
   const dw = img.naturalWidth * scale;
   const dh = img.naturalHeight * scale;
-  let left = cx - face.x * dw;
-  let top = cy - face.y * dh;
   img.style.width = `${dw}px`;
   img.style.height = `${dh}px`;
-  img.style.left = `${left}px`;
-  img.style.top = `${top}px`;
-  const imgBottom = top + dh;
-  if (imgBottom < rush.height - 1) top += rush.height - imgBottom;
-  const imgRight = left + dw;
-  if (imgRight < rush.width - 1) left += rush.width - imgRight;
-  if (top < 0) top = 0;
-  if (left < 0) left = 0;
-  img.style.left = `${left}px`;
-  img.style.top = `${top}px`;
+  img.style.left = `${cx - face.x * dw}px`;
+  img.style.top = `${cy - face.y * dh}px`;
 }
 
 function startHomeFlash() {

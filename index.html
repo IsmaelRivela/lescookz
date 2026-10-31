@@ -213,50 +213,17 @@
             <span class="passed-side__title-line">along</span>
           </h1>
           <p class="passed-side__intro" id="passed-intro"></p>
-          <p class="passed-form__japan-note" id="passed-japan-note"></p>
-          <div class="passed-city-pick" id="passed-city-pick" hidden>
-            <p class="passed-form__label" id="passed-city-pick-label"></p>
-            <div class="passed-city-pick__list" id="passed-city-pick-list"></div>
-          </div>
           <form class="passed-form" id="passed-form" novalidate>
-            <div class="passed-form__mode" role="tablist" aria-label="Modo de entrada">
-              <button type="button" class="passed-form__mode-btn is-on" data-passed-mode="auto">Automático</button>
-              <button type="button" class="passed-form__mode-btn" data-passed-mode="manual">Manual</button>
-            </div>
-            <button type="button" class="passed-form__geo" id="passed-geo">Usar mi ubicación</button>
+            <label class="passed-form__field">
+              <span class="passed-form__label">Enlace Google Maps</span>
+              <input name="maps_auto" type="text" autocomplete="off" inputmode="url" placeholder="Pega el enlace" required>
+            </label>
+            <p class="passed-form__parsed" id="passed-parsed" hidden></p>
+            <a class="passed-form__maps" href="https://www.google.com/maps" target="_blank" rel="noopener noreferrer">Abrir Google Maps</a>
 
-            <div class="passed-form__panel" data-passed-panel="auto">
-              <label class="passed-form__field">
-                <span class="passed-form__label">Enlace Google Maps</span>
-                <input name="maps_auto" type="text" autocomplete="off" inputmode="url" placeholder="Pega el enlace">
-              </label>
-              <p class="passed-form__parsed" id="passed-parsed" hidden></p>
-              <a class="passed-form__maps" href="https://www.google.com/maps" target="_blank" rel="noopener noreferrer">Abrir Maps</a>
-              <p class="passed-form__maps-note">Nombre, ubicación y ciudad se leen del enlace.</p>
-            </div>
-
-            <div class="passed-form__panel" data-passed-panel="manual" hidden>
-              <label class="passed-form__field">
-                <span class="passed-form__label">Nombre del sitio</span>
-                <input name="nombre" type="text" autocomplete="off" placeholder="Nombre">
-              </label>
-              <label class="passed-form__field">
-                <span class="passed-form__label">Ciudad</span>
-                <input name="ciudad" type="text" autocomplete="off" placeholder="Tokio, Kioto…">
-              </label>
-              <label class="passed-form__field">
-                <span class="passed-form__label">Maps o dirección</span>
-                <input name="maps_manual" type="text" autocomplete="off" placeholder="Enlace o búsqueda">
-              </label>
-            </div>
-
-            <div class="passed-form__share">
-              <p class="passed-form__label">Nota</p>
-              <p class="passed-form__prompt" id="passed-share-prompt"></p>
-              <label class="passed-form__field passed-form__field--bare">
-                <textarea name="comida" required autocomplete="off" rows="4" placeholder="Lo que quieras contar…"></textarea>
-              </label>
-            </div>
+            <label class="passed-form__field passed-form__field--bare">
+              <textarea name="comida" required autocomplete="off" rows="4" placeholder="Lo que quieras contar…"></textarea>
+            </label>
 
             <div class="passed-form__submit">
               <button type="submit" class="passed-form__send">Añadir</button>
