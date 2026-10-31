@@ -392,8 +392,12 @@
     background: #fff;
     transform: none;
   }
+  .t-card.is-open .t-card__media {
+    aspect-ratio: auto;
+  }
   .t-card.is-open .t-card__media img {
     opacity: 1;
+    height: auto;
     max-height: 54vh;
     object-fit: contain;
   }

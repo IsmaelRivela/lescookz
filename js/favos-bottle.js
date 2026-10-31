@@ -470,17 +470,29 @@ window.favosBottle = {
   syncActive,
 };
 
-preloadAll()
-  .then(() => showPick(0))
-  .then(() => {
-    refreshThumbs();
-    if (motionOn) startMotion();
-    else if (favosViewOn()) {
-      motionOn = true;
-      startMotion();
-    }
-  })
-  .catch((err) => console.error("favos preload", err));
+let favosBoot = null;
+function bootFavosModels() {
+  if (favosBoot) return favosBoot;
+  favosBoot = preloadAll()
+    .then(() => showPick(0))
+    .then(() => {
+      refreshThumbs();
+      if (motionOn) startMotion();
+      else if (favosViewOn()) {
+        motionOn = true;
+        startMotion();
+      }
+    })
+    .catch((err) => console.error("favos preload", err));
+  return favosBoot;
+}
+
+function maybeBootFavos() {
+  if (location.pathname.includes("/favos")) bootFavosModels();
+}
+
+window.addEventListener("cookz-nav", maybeBootFavos);
+maybeBootFavos();
 
 document.addEventListener("visibilitychange", () => {
   if (document.hidden) stopMotion();

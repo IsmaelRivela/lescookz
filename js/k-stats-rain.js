@@ -307,12 +307,32 @@ if (canvas && link && frame && hub && !reduce) {
     }
   }
 
+  let rainBooted = false;
+  function bootRain() {
+    if (rainBooted) return;
+    rainBooted = true;
+    Promise.all(
+      MODELS.map((url) =>
+        loader.loadAsync(url).then((gltf) => ({ id: modelId(url), root: fit(gltf.scene) })).catch(() => null)
+      )
+    ).then((list) => {
+      templates = list.filter(Boolean);
+      const asahi = templates.find((item) => item.id === "asahi");
+      if (asahi) shineCan(asahi.root);
+      buildTally(makeThumbs());
+      ready = templates.length > 0;
+      if (wants) start();
+    });
+  }
+
   link.addEventListener("mouseenter", () => {
     wants = true;
+    bootRain();
     start();
   });
   link.addEventListener("focus", () => {
     wants = true;
+    bootRain();
     start();
   });
   link.addEventListener("mouseleave", () => {
@@ -323,18 +343,5 @@ if (canvas && link && frame && hub && !reduce) {
   });
   window.addEventListener("resize", () => {
     if (canvas.classList.contains("is-on")) resize();
-  });
-
-  Promise.all(
-    MODELS.map((url) =>
-      loader.loadAsync(url).then((gltf) => ({ id: modelId(url), root: fit(gltf.scene) })).catch(() => null)
-    )
-  ).then((list) => {
-    templates = list.filter(Boolean);
-    const asahi = templates.find((item) => item.id === "asahi");
-    if (asahi) shineCan(asahi.root);
-    buildTally(makeThumbs());
-    ready = templates.length > 0;
-    if (wants) start();
   });
 }

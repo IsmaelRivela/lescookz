@@ -382,10 +382,9 @@ button { border: 0; background: none; padding: 0; cursor: pointer; text-align: l
 }
 .j-card--konbini .j-card__film-player {
   position: absolute;
-  left: 0;
-  top: -12%;
+  inset: 0;
   width: 100%;
-  height: 128%;
+  height: 100%;
   border: 0;
   pointer-events: none;
 }
@@ -566,11 +565,13 @@ button { border: 0; background: none; padding: 0; cursor: pointer; text-align: l
 .t-card__media {
   position: relative;
   line-height: 0;
+  aspect-ratio: 1 / 2.2;
+  background: #fff;
 }
 .t-card__media img {
   display: block;
   width: 100%;
-  height: auto;
+  height: 100%;
   object-fit: contain;
   transition: opacity 0.32s ease;
 }

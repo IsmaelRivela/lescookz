@@ -966,7 +966,13 @@ if (!canvas || !view) {
     resize();
     if (playing) renderer.render(scene, camera);
   });
-  start().catch((err) => {
-    console.error("cs inspect", err);
-  });
+  let inspectBooted = false;
+  function maybeBootInspect() {
+    if (inspectBooted) return;
+    if (!location.pathname.includes("/konbini/tracker")) return;
+    inspectBooted = true;
+    start().catch((err) => console.error("cs inspect", err));
+  }
+  window.addEventListener("cookz-nav", maybeBootInspect);
+  maybeBootInspect();
 }
