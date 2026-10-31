@@ -873,7 +873,10 @@ function nhgOn() {
 }
 
 function nhgDisplaySize(size) {
-  return nhgOn() ? Math.min(size, 228) : size;
+  if (!nhgOn()) return size;
+  const mobile = window.matchMedia("(max-width: 820px)").matches;
+  const cap = mobile ? 80 : 228;
+  return Math.min(size, cap);
 }
 
 const NHG_FONT_SPECS = [
@@ -3801,6 +3804,8 @@ function initJapanMotion() {
     if (japanPointerTouch && japanDragDistance < 14) {
       japanDragDistance = 0;
       japanVelocity = 0;
+      const card = e.target.closest(".j-card:not([aria-hidden])");
+      if (card) card.blur();
       return;
     }
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -3882,6 +3887,13 @@ function layoutJapanHeader() {
   );
   const gap = Math.max(12, frame.clientHeight * 0.02);
   frame.style.setProperty("--japan-header", `${headerBottom - frameTop + gap}px`);
+}
+
+function relayoutJapanSoft() {
+  layoutJapanHeader();
+  setupJapanCarousel();
+  if (!measureJapanLoop()) return;
+  applyJapanTransform();
 }
 
 function layoutJapan() {
@@ -4812,7 +4824,7 @@ function releaseScreen(key) {
     }
     if (el.tagName === "VIDEO" && el.hasAttribute("autoplay")) el.play?.().catch(() => {});
     if (el.closest(".j-card") && el.tagName !== "IFRAME") {
-      el.addEventListener(el.tagName === "VIDEO" ? "loadeddata" : "load", () => layoutJapan(), { once: true });
+      el.addEventListener(el.tagName === "VIDEO" ? "loadeddata" : "load", () => relayoutJapanSoft(), { once: true });
     }
   });
 }
@@ -4944,7 +4956,7 @@ function init() {
 
   addEventListener("popstate", apply);
   document.querySelectorAll(".j-card img").forEach((img) => {
-    if (!img.complete) img.addEventListener("load", layoutJapan);
+    if (!img.complete) img.addEventListener("load", relayoutJapanSoft);
   });
 
   addEventListener("resize", () => {
