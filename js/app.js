@@ -630,6 +630,15 @@ function paintSiteTree() {
   }
 }
 
+const COOKZ_CHROME_RED = "#c03535";
+
+function syncBrowserChromeColor(screen) {
+  const meta = document.getElementById("meta-theme-color");
+  if (!meta) return;
+  const red = screen === "home" || screen === "manifest";
+  meta.content = red ? COOKZ_CHROME_RED : "#ffffff";
+}
+
 function go(screen, extra, replace) {
   const path = screenPath(screen, extra);
   const here = `${location.pathname}${location.search}`;
@@ -1586,6 +1595,7 @@ function show(screen) {
     startHomeFlash();
     scheduleHomeDiaryFit();
   }
+  syncBrowserChromeColor(screen);
   syncSiteTreeIfOpen();
 
   const sub = screen === "konbini";

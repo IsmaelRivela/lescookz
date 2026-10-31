@@ -107,8 +107,11 @@ button { border: 0; background: none; padding: 0; cursor: pointer; text-align: l
   background: var(--red);
 }
 html:has(.frame[data-screen="home"].is-on),
+html:has(.frame[data-screen="manifest"].is-on),
 body:has(.frame[data-screen="home"].is-on),
-body:has(.frame[data-screen="home"].is-on) #viewport {
+body:has(.frame[data-screen="manifest"].is-on),
+body:has(.frame[data-screen="home"].is-on) #viewport,
+body:has(.frame[data-screen="manifest"].is-on) #viewport {
   background-color: var(--red);
 }
 .frame[data-screen="home"] > a .logo {
@@ -811,7 +814,7 @@ body:has(.frame[data-screen="home"].is-on) .home__diary {
 
 /* Manifest — prueba: lienzo rojo, logo y textos blancos */
 .frame[data-screen="manifest"] {
-  background: var(--red);
+  background-color: var(--red);
   color: #fff;
 }
 .frame[data-screen="manifest"] .section-title {

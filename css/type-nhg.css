@@ -258,6 +258,11 @@ html[data-type="nhg"] .manifest__copy strong {
     font-size: var(--m-title-lead);
   }
 
+  html[data-type="nhg"] .manifest__copy {
+    font-size: calc(13px + 2pt);
+    line-height: 1.52;
+  }
+
   html[data-type="nhg"] .manifest__copy .manifest__kicker,
   html[data-type="nhg"] .manifest__copy > b:first-child,
   html[data-type="nhg"] .manifest__copy > strong:first-child {
