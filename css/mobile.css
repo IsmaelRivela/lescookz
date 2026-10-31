@@ -318,9 +318,6 @@
     margin: 0 0 0.85rem;
     padding-right: 0;
   }
-  .manifest__tools button {
-    min-height: 36px;
-  }
   .manifest__portrait {
     order: 2;
     width: 100%;
@@ -337,10 +334,11 @@
     overflow: visible;
     flex: none;
     padding-right: 0;
-    font-size: 17px;
-    line-height: 1.5;
-    text-align: left;
-    text-align-last: auto;
+    font-size: clamp(17px, 4.25vw, 20px);
+    line-height: 1.52;
+    text-align: justify;
+    text-align-last: left;
+    text-justify: inter-word;
   }
 
   .frame[data-screen="lienzo"] .back {

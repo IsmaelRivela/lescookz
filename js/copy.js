@@ -8,7 +8,7 @@ window.COOKZ_COPY = {
     "explore": "explorar",
     "back": "Atrás",
     "titleJapan2026": "Japan 2026",
-    "titleManifest": "Manifiesto",
+    "titleManifest": "Manifest",
     "titlePassed": "Passed along",
     "titleKonbini": "Konbini",
     "konbiniTickets": "Tickets",

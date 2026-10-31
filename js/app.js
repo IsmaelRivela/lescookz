@@ -4037,14 +4037,6 @@ function initManifest() {
   };
 
   el.addEventListener("input", store);
-  $$("[data-fmt]").forEach((btn) => {
-    btn.addEventListener("mousedown", (e) => e.preventDefault());
-    btn.addEventListener("click", () => {
-      el.focus();
-      document.execCommand(btn.dataset.fmt, false);
-      store();
-    });
-  });
 }
 
 function bindTicketRain() {
