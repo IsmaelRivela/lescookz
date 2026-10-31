@@ -276,9 +276,8 @@ if (canvas && panel) {
     clearTimeout(goTimer);
     goTimer = 0;
   });
-  window.addEventListener("cookz-nav", () => {
-    const path = location.pathname.replace(/\/$/, "") || "/";
-    if (path === "/" || path === "/lescookz") return;
+  window.addEventListener("hashchange", () => {
+    if (location.hash === "#/home" || location.hash === "" || location.hash === "#") return;
     clearTimeout(goTimer);
     goTimer = 0;
     if (spinTarget === 0) return;

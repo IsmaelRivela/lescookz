@@ -17,6 +17,18 @@
     <link rel="stylesheet" href="media/font/satoshi.css" />
     <link rel="stylesheet" href="css/main.css" />
     <link rel="stylesheet" href="css/mobile.css" />
+    <script>
+      if (new URLSearchParams(location.search).get("type") === "satoshi") {
+        document.documentElement.removeAttribute("data-type");
+      } else {
+        document.documentElement.dataset.type = "nhg";
+        const kit = document.createElement("link");
+        kit.rel = "stylesheet";
+        kit.href = "https://use.typekit.net/uxt8bvb.css";
+        document.head.appendChild(kit);
+      }
+    </script>
+    <link rel="stylesheet" href="css/type-nhg.css" />
     <script type="importmap">
       {
         "imports": {
@@ -34,19 +46,19 @@
       </div>
     </div>
     <nav class="site-tree" id="site-tree" hidden data-i18n="treeLabel" data-i18n-attr="aria-label" aria-label="Contenidos">
-      <button type="button" data-tree="home" data-i18n="treeHome">inicio</button>
-      <button type="button" data-tree="japan2026">japan 2026</button>
+      <button type="button" data-tree="home" data-i18n="treeHome">Inicio</button>
+      <button type="button" data-tree="japan2026" data-i18n="titleJapan2026">Japan 2026</button>
       <div class="site-tree__nest">
-        <button type="button" data-tree="cookz">cookz</button>
-        <button type="button" data-tree="konbini">konbini</button>
+        <button type="button" data-tree="cookz" data-i18n="treeCookz">Cookz</button>
+        <button type="button" data-tree="konbini" data-i18n="titleKonbini">Konbini</button>
         <div class="site-tree__nest">
-          <button type="button" data-tree="konbini" data-extra="tickets-all">tickets</button>
-          <button type="button" data-tree="konbini" data-extra="tracker">tracker</button>
-          <button type="button" data-tree="konbini" data-extra="favos">favos</button>
+          <button type="button" data-tree="konbini" data-extra="tickets-all" data-i18n="konbiniTickets">Tickets</button>
+          <button type="button" data-tree="konbini" data-extra="tracker" data-i18n="konbiniTracker">Tracker</button>
+          <button type="button" data-tree="konbini" data-extra="favos" data-i18n="konbiniFavos">Favos</button>
         </div>
-        <button type="button" data-tree="passed-along">passed along</button>
+        <button type="button" data-tree="passed-along" data-i18n="titlePassed">Passed along</button>
       </div>
-      <button type="button" data-tree="manifest">manifest</button>
+      <button type="button" data-tree="manifest" data-i18n="titleManifest">Manifiesto</button>
     </nav>
     <div id="viewport">
     <div id="sizer">
@@ -55,14 +67,10 @@
       <div class="home__rush" aria-hidden="true"></div>
       <a href="/" data-goto="home"><img class="logo" src="media/ui/logo-mark.svg" alt="cookz" /></a>
       <div class="home__menu">
-        <button type="button" aria-expanded="false" aria-controls="home-menu-list" data-i18n="menu">menú</button>
-        <nav id="home-menu-list" hidden>
-          <a href="/japan2026" data-goto="japan2026">japan 2026</a>
-          <a href="/manifest" data-goto="manifest">manifest</a>
-        </nav>
+        <button type="button" aria-expanded="false" aria-controls="site-tree" data-i18n="menu">MENÚ</button>
       </div>
       <div class="home__center">
-        <canvas class="home__plate" id="home-plate" aria-label="les cookz"></canvas>
+        <canvas class="home__plate" id="home-plate" aria-label="Les Cookz"></canvas>
         <p class="home__explore" data-i18n="explore">explore</p>
       </div>
       <aside class="home__metal" aria-label="Acabado del plato">
@@ -90,29 +98,7 @@
 
     <section class="frame" data-screen="japan2026">
       <a href="/" data-goto="home"><img class="logo" src="media/ui/logo-mark.svg" alt="cookz" /></a>
-      <img class="logo logo--mix" src="media/ui/logo-mark.svg" alt="" aria-hidden="true" />
-      <h1 class="section-title">Japan2026</h1>
-      <label class="j-blend" hidden>
-        mezcla
-        <select id="j-logo-blend" aria-label="Modo de mezcla del logo">
-          <option value="normal">normal</option>
-          <option value="multiply">multiply</option>
-          <option value="screen">screen</option>
-          <option value="overlay">overlay</option>
-          <option value="darken">darken</option>
-          <option value="lighten">lighten</option>
-          <option value="color-dodge">color-dodge</option>
-          <option value="color-burn">color-burn</option>
-          <option value="hard-light">hard-light</option>
-          <option value="soft-light">soft-light</option>
-          <option value="difference">difference</option>
-          <option value="exclusion">exclusion</option>
-          <option value="hue">hue</option>
-          <option value="saturation" selected>saturation</option>
-          <option value="color">color</option>
-          <option value="luminosity">luminosity</option>
-        </select>
-      </label>
+      <h1 class="section-title" data-i18n="titleJapan2026">Japan 2026</h1>
       <div class="j-window" id="j-window">
         <div class="j-track">
           <a class="j-card j-card--cookz" href="/cookz" data-goto="cookz">
@@ -161,10 +147,10 @@
 
     <section class="frame" data-screen="manifest">
       <a href="/" data-goto="home"><img class="logo" src="media/ui/logo-mark.svg" alt="cookz" /></a>
-      <h1 class="section-title">Manifest</h1>
+      <h1 class="section-title" data-i18n="titleManifest">Manifiesto</h1>
       <div class="manifest__grid">
         <div class="manifest__edit">
-          <div id="manifest-copy" class="manifest__copy" contenteditable="true" spellcheck="true" role="textbox" aria-label="Texto del manifest" data-placeholder="Escribe el manifest"><b>¿Por qué LesCookz?</b><p><br></p><p>Al principio, en el primer borrador, hablaba del miedo a que este proyecto pudiera parecer presuntuoso. Sin darme cuenta, acabé escribiendo como cuando tenía que presentar un ensayo en la universidad: utilizando el lenguaje más enrevesado y denso posible, casi como una forma de justificarme y protegerme de ese miedo.</p><p><br></p><p>Es curioso, porque es precisamente lo contrario de lo que quiero transmitir con este proyecto. Supongo que ese miedo a mostrarme un poco más como soy, a dejar ver algo de mí sin saber cómo será juzgado, tiene mucho que ver con una de las ideas que hay detrás de <i>LesCookz</i>: no tener miedo a ser humanos.</p><p><br></p><p>Mi intención con esto es transmitir, mínimamente y a través de la creación de universos visuales temáticos, cómo me gusta la cocina y cómo me gusta el ser humano cuando, de múltiples formas, está alrededor de ella. Porque no soy cocinero, pero me habría encantado serlo y, visto desde el otro lado, tampoco está tan mal.</p><p><br></p><p>Digo desde el otro lado porque, durante mi estancia en Japón, lo que más me atrajo y me facilitó la recopilación de información, las charlas, las fotografías y la observación directa, tanto de cocineros como de clientes, fueron las barras abiertas frente a la cocina. Una distribución física que posibilita una relación humana más cercana y menos deshumanizada que la que parece promover un sector cada vez más acostumbrado a las tablets y pantallas a través de las que pedir comida sin intercambiar una sola palabra con nadie.</p><p><br></p><p><i>LesCookz</i> nace justamente de lo humano dentro de la cocina y de perder el miedo a hablar con otra persona. Entristece sentir que, a menudo, y yo soy el primero que lo hace, nuestro compañero de comida acaba siendo ese vídeo de YouTube que llevas cinco minutos buscando o el capítulo de la serie que sea de Amazon Prime. Y es que la cocina y la comida son, para mí, de las acciones más cálidas que tiene el ser humano consigo mismo y con quienes le rodean.</p><p><br></p><p>¿Por qué cuando comes con amigos recalcas lo bueno que está tu plato, das a probar y te dejas probar, mientras que cuando estás solo no piensas ni la mitad de veces en darle valor a lo que estás comiendo? Incluso cuando son platos que has comido mil veces en casa, has normalizado lo buenos que están y no te das cuenta de lo que tienes hasta que dejas de tenerlo.</p><p><br></p><p>Por eso creo que empecé a construir esto: para no olvidarme de darle valor al aspecto humano de cada comida que como, de ser consciente de lo que estoy haciendo y de evitar ir en modo automático, al menos en algo que realmente amo, como es la cocina y todo lo que la rodea.</p><p><br></p><p>Porque la gente que está alrededor de una mesa no es hostil. Durante mi estancia en Japón, el simple hecho de compartir un espacio alrededor de la comida facilitó enormemente la comunicación con otras personas, incluso sin tener un idioma común. Porque si le preguntas a cualquier persona «¿qué te gusta comer?», casi cualquiera, sea introvertida o extrovertida, puede responderte al menos una cosa que le llene. Y a través de esa respuesta ya tienes una nueva conversación con alguien a quien hace un minuto ni siquiera conocías.</p><p><br></p><p>Por último, tengo que agradecer a todas las personas con las que me crucé por Japón, porque su calidez ha sido realmente uno de los motores para hacer esto. En la libreta les pedía que apuntaran sus nombres y, si les parecía bien, hacerles un retrato para un fotolibro. Pero mi intención ha cambiado. Simplemente quiero compartir sus fotografías, sin sus nombres, porque creo que realmente merecería la pena que algún día pudieseis visitar esos lugares y conocerlos vosotros mismos.</p><p><br></p><p><br></p></div>
+          <div id="manifest-copy" class="manifest__copy" contenteditable="true" spellcheck="true" role="textbox" aria-label="Texto del manifest" data-placeholder="Escribe el manifest"><b>¿Por qué LesCookz?</b><p><br></p><p>Al principio, en el primer borrador, hablaba del miedo a que este proyecto pudiera parecer presuntuoso. Sin darme cuenta, acabé escribiendo como cuando tenía que presentar un ensayo en la universidad: utilizando el lenguaje más enrevesado y denso posible, casi como una forma de justificarme y protegerme de ese miedo.</p><p><br></p><p>Es curioso, porque es precisamente lo contrario de lo que quiero transmitir con este proyecto. Supongo que ese miedo a mostrarme un poco más como soy, a dejar ver algo de mí sin saber cómo será juzgado, tiene mucho que ver con una de las ideas que hay detrás de <i>LesCookz</i>: no tener miedo de ser humano.</p><p><br></p><p>Mi intención con esto es transmitir, mínimamente y a través de la creación de universos visuales temáticos, cómo me gusta la cocina y cómo me gusta el ser humano cuando, de múltiples formas, está alrededor de ella. Porque no soy cocinero, pero me habría encantado serlo y, visto desde el otro lado, tampoco está tan mal.</p><p><br></p><p>Digo desde el otro lado porque, durante mi estancia en Japón, lo que más me atrajo y me facilitó la recopilación de información, las charlas, las fotografías y la observación directa, tanto de cocineros como de clientes, fueron las barras abiertas frente a la cocina. Una distribución física que posibilita una relación humana más cercana y menos deshumanizada que la que parece promover un sector cada vez más acostumbrado a las tablets y pantallas a través de las que pedir comida sin intercambiar una sola palabra con nadie.</p><p><br></p><p><i>LesCookz</i> nace justamente de lo humano dentro de la cocina y de perder el miedo a hablar con otra persona. Entristece sentir que, a menudo, y yo soy el primero que lo hace, nuestro compañero de comida acaba siendo ese vídeo de YouTube que llevas cinco minutos buscando o el capítulo de la serie que sea de Amazon Prime. Y es que la cocina y la comida son, para mí, de las acciones más cálidas que tiene el ser humano consigo mismo y con quienes le rodean.</p><p><br></p><p>¿Por qué cuando comes con amigos recalcas lo bueno que está tu plato, das a probar y te dejas probar, mientras que cuando estás solo no piensas ni la mitad de veces en darle valor a lo que estás comiendo? Incluso cuando son platos que has comido mil veces en casa, has normalizado lo bueno que son y no te das cuenta de lo que tienes hasta que dejas de tenerlo.</p><p><br></p><p>Por eso creo que empecé a construir esto: para no olvidarme de darle valor al aspecto humano de cada comida que como, de ser consciente de lo que estoy haciendo y de evitar ir en modo automático, al menos en algo que realmente amo, como es la cocina y todo lo que la rodea.</p><p><br></p><p>Porque la gente que está alrededor de una mesa no es hostil. Durante mi estancia en Japón, el simple hecho de compartir un espacio alrededor de la comida facilitó enormemente la comunicación con otras personas, incluso sin tener un idioma común. Porque si le preguntas a cualquier persona «¿qué te gusta comer?», casi cualquiera, sea introvertida o extrovertida, puede responderte al menos una cosa que le llene. Y a través de esa respuesta ya tienes una nueva conversación con alguien a quien hace un minuto ni siquiera conocías.</p><p><br></p><p>Por último, tengo que agradecer a todas las personas con las que me crucé por Japón, porque su calidez ha sido realmente uno de los motores para hacer esto. En la libreta les pedía que apuntaran sus nombres y, si les parecía bien, hacerles un retrato para un fotolibro. Pero mi intención ha cambiado. Simplemente quiero compartir sus fotografías, sin sus nombres, porque creo que realmente merecería la pena que algún día pudieseis visitar esos lugares y conocerlos vosotros mismos.</p><p><br></p><p><br></p></div>
           <div class="manifest__tools">
             <button type="button" data-fmt="bold" data-i18n="bold">Negrita</button>
             <button type="button" data-fmt="italic" data-i18n="italic">Cursiva</button>
@@ -213,23 +199,76 @@
 
     <section class="frame" data-screen="passed-along">
       <a href="/" data-goto="home"><img class="logo" src="media/ui/logo-mark.svg" alt="cookz" /></a>
-      <h1 class="section-title">Passed along</h1>
-      <div class="passed" id="passed">
-        <div class="passed__world" id="passed-world"></div>
+      <div class="passed-shell">
+        <div class="passed" id="passed">
+          <div class="passed__stage">
+            <div class="passed__world" id="passed-world"></div>
+            <div class="passed__fade" aria-hidden="true"></div>
+          </div>
+          <div class="passed-city-bar" id="passed-city-bar" aria-label="Filtrar por ciudad"></div>
+        </div>
+        <aside class="passed-side" aria-label="Passed along">
+          <h1 class="passed-side__title" id="passed-side-title">
+            <span class="passed-side__title-line">Passed</span>
+            <span class="passed-side__title-line">along</span>
+          </h1>
+          <p class="passed-side__intro" id="passed-intro"></p>
+          <p class="passed-form__japan-note" id="passed-japan-note"></p>
+          <div class="passed-city-pick" id="passed-city-pick" hidden>
+            <p class="passed-form__label" id="passed-city-pick-label"></p>
+            <div class="passed-city-pick__list" id="passed-city-pick-list"></div>
+          </div>
+          <form class="passed-form" id="passed-form" novalidate>
+            <div class="passed-form__mode" role="tablist" aria-label="Modo de entrada">
+              <button type="button" class="passed-form__mode-btn is-on" data-passed-mode="auto">Automático</button>
+              <button type="button" class="passed-form__mode-btn" data-passed-mode="manual">Manual</button>
+            </div>
+            <button type="button" class="passed-form__geo" id="passed-geo">Usar mi ubicación</button>
+
+            <div class="passed-form__panel" data-passed-panel="auto">
+              <label class="passed-form__field">
+                <span class="passed-form__label">Enlace Google Maps</span>
+                <input name="maps_auto" type="text" autocomplete="off" inputmode="url" placeholder="Pega el enlace">
+              </label>
+              <p class="passed-form__parsed" id="passed-parsed" hidden></p>
+              <a class="passed-form__maps" href="https://www.google.com/maps" target="_blank" rel="noopener noreferrer">Abrir Maps</a>
+              <p class="passed-form__maps-note">Nombre, ubicación y ciudad se leen del enlace.</p>
+            </div>
+
+            <div class="passed-form__panel" data-passed-panel="manual" hidden>
+              <label class="passed-form__field">
+                <span class="passed-form__label">Nombre del sitio</span>
+                <input name="nombre" type="text" autocomplete="off" placeholder="Nombre">
+              </label>
+              <label class="passed-form__field">
+                <span class="passed-form__label">Ciudad</span>
+                <input name="ciudad" type="text" autocomplete="off" placeholder="Tokio, Kioto…">
+              </label>
+              <label class="passed-form__field">
+                <span class="passed-form__label">Maps o dirección</span>
+                <input name="maps_manual" type="text" autocomplete="off" placeholder="Enlace o búsqueda">
+              </label>
+            </div>
+
+            <div class="passed-form__share">
+              <p class="passed-form__label">Nota</p>
+              <p class="passed-form__prompt" id="passed-share-prompt"></p>
+              <label class="passed-form__field passed-form__field--bare">
+                <textarea name="comida" required autocomplete="off" rows="4" placeholder="Lo que quieras contar…"></textarea>
+              </label>
+            </div>
+
+            <div class="passed-form__submit">
+              <button type="submit" class="passed-form__send">Añadir</button>
+              <p class="passed-form__added" id="passed-added" hidden aria-live="polite"></p>
+            </div>
+            <p class="passed-form__hint" hidden>
+              <span class="passed-form__hint-line"></span>
+              <button type="button" class="passed-form__hint-site" hidden></button>
+            </p>
+          </form>
+        </aside>
       </div>
-      <form class="passed-form" id="passed-form">
-        <p class="passed-form__lead">Mi recomendación</p>
-        <input name="nombre" type="text" required autocomplete="off" placeholder="Nombre del sitio" aria-label="Nombre del sitio">
-        <textarea name="comida" required autocomplete="off" rows="3" placeholder="Prueba esto!" aria-label="Prueba esto"></textarea>
-        <a class="passed-form__maps" href="https://www.google.com/maps" target="_blank" rel="noopener noreferrer">Abrir Maps</a>
-        <p class="passed-form__maps-note">Busca el sitio, copia el enlace y pégalo.</p>
-        <input name="maps" type="url" required autocomplete="off" inputmode="url" placeholder="Pegar el link" aria-label="Pegar el link">
-        <button type="submit" class="passed-form__send">Añadir</button>
-        <p class="passed-form__hint" hidden>
-          <span class="passed-form__hint-line"></span>
-          <button type="button" class="passed-form__hint-site" hidden></button>
-        </p>
-      </form>
       <aside class="passed-note" id="passed-note" hidden>
         <p class="passed-note__name"></p>
         <a class="passed-note__link" target="_blank" rel="noopener noreferrer"></a>
@@ -240,7 +279,7 @@
 
     <section class="frame" data-screen="konbini">
       <a href="/" data-goto="home"><img class="logo" src="media/ui/logo-mark.svg" alt="cookz" /></a>
-      <h1 class="section-title">Konbini</h1>
+      <h1 class="section-title" data-i18n="titleKonbini">Konbini</h1>
 
       <video
         id="k-film-frame"

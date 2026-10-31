@@ -1,0 +1,187 @@
+/* Prueba local de la escala del reel (Modus Forma).
+   Quitar este archivo del HTML vuelve a Satoshi.
+   Comparar sin tocar archivos: ?type=satoshi
+   La Neue entra por el kit de Typekit (uxt8bvb). */
+
+html[data-type="nhg"] {
+  --nhg-display: "neue-haas-grotesk-display", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --nhg-text: "neue-haas-grotesk-text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --nhg-body: #6a6a6a;
+  --nhg-title: #111;
+}
+
+html[data-type="nhg"] body {
+  font-family: var(--nhg-text);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--nhg-body);
+}
+
+/* Display — 228px solo nivel 1 del reel: pie (diary) y romaji a ancho de plato.
+   El JS limita el fit a 228px. No incluye «explorar» ni labels de tarjetas. */
+html[data-type="nhg"] .home__diary,
+html[data-type="nhg"] .cookz-romaji {
+  font-family: var(--nhg-display);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+}
+
+html[data-type="nhg"] .home__diary span,
+html[data-type="nhg"] .cookz-romaji span {
+  letter-spacing: -0.04em;
+}
+
+/* H1 — título de sección / proyecto. 55px, bold, -1%, interlineado 100%. Sigue en rojo. */
+html[data-type="nhg"] .home__explore,
+html[data-type="nhg"] .j-card__label,
+html[data-type="nhg"] .k-menu a,
+html[data-type="nhg"] .lang-gate button {
+  font-family: var(--nhg-display);
+  font-size: 55px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+}
+
+html[data-type="nhg"] .section-title {
+  font-family: var(--nhg-display);
+  font-size: 82.5px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+}
+
+/* Excepción Cookz: label Konbini en carrusel (tamaño del layout original, no 228 del reel). */
+html[data-type="nhg"] .j-card--konbini .j-card__label {
+  font-size: clamp(72px, 11vh, 140px);
+  line-height: 1.15;
+  letter-spacing: 0;
+}
+
+html[data-type="nhg"] .passed-form__lead,
+html[data-type="nhg"] .manifest__tools button,
+html[data-type="nhg"] .manifest__tools span {
+  text-transform: uppercase;
+}
+
+/* H4 — presenta el estudio o el local. 17px, -1%, 120%. Negro. */
+html[data-type="nhg"] .manifest__copy b,
+html[data-type="nhg"] .manifest__copy strong,
+html[data-type="nhg"] .frame[data-screen="cookz"] .detail__ja,
+html[data-type="nhg"] .detail__ja,
+html[data-type="nhg"] .passed-form__lead,
+html[data-type="nhg"] .passed-note__name,
+html[data-type="nhg"] .vlist button {
+  font-family: var(--nhg-text);
+  font-size: 17px;
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  text-transform: none;
+  color: var(--nhg-title);
+}
+
+html[data-type="nhg"] .vlist button {
+  line-height: 50px;
+}
+
+html[data-type="nhg"] .vlist button.is-on {
+  font-weight: 700;
+}
+
+/* Cuerpo y links — 13px, 120%. El texto largo va en gris. */
+html[data-type="nhg"] .manifest__copy,
+html[data-type="nhg"] .manifest__tools button,
+html[data-type="nhg"] .manifest__tools span,
+html[data-type="nhg"] .frame[data-screen="cookz"] .detail__romaji,
+html[data-type="nhg"] .frame[data-screen="cookz"] .detail__address,
+html[data-type="nhg"] .frame[data-screen="cookz"] .detail__address-ja,
+html[data-type="nhg"] .frame[data-screen="cookz"] .order-sheet,
+html[data-type="nhg"] .frame[data-screen="cookz"] .cookz-nav__venues,
+html[data-type="nhg"] .frame[data-screen="cookz"] .cookz-nav__venues button,
+html[data-type="nhg"] .t-sort__btn,
+html[data-type="nhg"] .passed-form input,
+html[data-type="nhg"] .passed-form textarea,
+html[data-type="nhg"] .passed-form__maps,
+html[data-type="nhg"] .passed-form__maps-note,
+html[data-type="nhg"] .passed-form__hint,
+html[data-type="nhg"] .passed-note__link,
+html[data-type="nhg"] .passed-note__food {
+  font-family: var(--nhg-text);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  text-transform: none;
+}
+
+/* Árbol de contenidos — 20px fijo (no cuerpo 13px). */
+html[data-type="nhg"] .site-tree button {
+  font-family: var(--nhg-text);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  text-transform: none;
+}
+
+html[data-type="nhg"] .home__menu button {
+  font-family: var(--nhg-text);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+}
+
+html[data-type="nhg"] .passed-form__send {
+  font-family: var(--nhg-text);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+}
+
+html[data-type="nhg"] .manifest__copy,
+html[data-type="nhg"] .frame[data-screen="cookz"] .detail__address,
+html[data-type="nhg"] .frame[data-screen="cookz"] .detail__address-ja,
+html[data-type="nhg"] .frame[data-screen="cookz"] .order-sheet,
+html[data-type="nhg"] .frame[data-screen="cookz"] .detail__romaji,
+html[data-type="nhg"] .passed-form__maps-note,
+html[data-type="nhg"] .passed-side__intro,
+html[data-type="nhg"] .passed-form__prompt,
+html[data-type="nhg"] .passed-note__food,
+html[data-type="nhg"] .passed-form__hint {
+  color: var(--nhg-body);
+}
+
+html[data-type="nhg"] .passed-form__label {
+  font-family: var(--nhg-text);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.35;
+  text-transform: none;
+  color: var(--nhg-body);
+}
+
+html[data-type="nhg"] .passed-side__title {
+  font-family: var(--nhg-display, var(--nhg-text));
+  font-size: clamp(40px, 27cqi, 88px);
+  font-weight: 700;
+  line-height: 0.88;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+  color: var(--red);
+}
+
+html[data-type="nhg"] .manifest__copy b,
+html[data-type="nhg"] .manifest__copy strong {
+  color: var(--nhg-title);
+  text-transform: uppercase;
+}

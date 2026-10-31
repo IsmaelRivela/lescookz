@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>Cookz · revisión de direcciones</title>
+    <link rel="stylesheet" href="cookz-address-audit.css" />
+  </head>
+  <body>
+    <div class="audit">
+      <aside class="audit__side">
+        <header class="audit__head">
+          <h1>Direcciones Cookz</h1>
+          <p>Compara la ficha en datos con Maps. Los borradores viven en localStorage hasta que pegues el snippet en <code>data/cooks-data.js</code>.</p>
+          <div class="audit__stats" id="audit-stats"></div>
+        </header>
+        <ul class="audit__list" id="audit-list" aria-label="Locales"></ul>
+      </aside>
+      <main class="audit__main">
+        <div id="audit-panel">Cargando…</div>
+
+        <section class="audit__export">
+          <h2 class="audit__title" style="font-size:1.05rem">Lista completa (datos actuales + borradores)</h2>
+          <div class="audit__table-wrap">
+            <table class="audit__table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Local</th>
+                  <th>Dirección ES</th>
+                  <th>Dirección JA</th>
+                  <th>Maps</th>
+                  <th>Nota</th>
+                </tr>
+              </thead>
+              <tbody id="audit-table-body"></tbody>
+            </table>
+          </div>
+          <p class="audit__hint">Export JSON (para compartir correcciones con el agente):</p>
+          <textarea id="export-json" class="audit__snippet textarea" readonly style="min-height:120px"></textarea>
+          <div class="audit__actions">
+            <button type="button" class="audit__btn" id="btn-copy-json">Copiar JSON</button>
+            <button type="button" class="audit__btn" id="btn-clear-all">Borrar borradores locales</button>
+          </div>
+        </section>
+      </main>
+    </div>
+    <script src="../data/cooks-data.js"></script>
+    <script src="cookz-address-audit.js"></script>
+  </body>
+</html>

@@ -1,6 +1,16 @@
 /**
  * Cookz list + media paths; addresses/maps from root cooks-data.js (COOKS).
  */
+function titleCaseWords(raw) {
+  return String(raw || "")
+    .replace(/_/g, " ")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+}
+
 function buildCookzVenues(lang = "es") {
   const PENDING = "media/photo/pending.jpg";
   const LIST_NAMES = {
@@ -9,7 +19,7 @@ function buildCookzVenues(lang = "es") {
     3: "Kakyo",
     4: "Quatre_Patisserie_Française",
     5: "029_Kichijoji_Shokudo",
-    6: "7 Eleven",
+    6: "Konbini",
     7: "Sukiya",
     8: "Maguro Garage",
     9: "Sammo",
@@ -192,11 +202,12 @@ function buildCookzVenues(lang = "es") {
       const orderJa = orderBlock(c, "ja");
 
       const venueJa = c.venue?.ja || "";
-      const venueRomaji =
+      const venueRomajiRaw =
         c.venueRomaji ||
         LIST_NAMES[c.id]?.replace(/_/g, " ") ||
         c.venue?.en ||
         `Cook ${c.id}`;
+      const listNameRaw = LIST_NAMES[c.id] || c.venue?.en || `Cook ${c.id}`;
 
       const pool =
         typeof COOKZ_POOL !== "undefined" && COOKZ_POOL[c.id]?.length
@@ -205,9 +216,9 @@ function buildCookzVenues(lang = "es") {
 
       return {
         id: c.id,
-        name: LIST_NAMES[c.id] || c.venue?.en || `Cook ${c.id}`,
+        name: titleCaseWords(listNameRaw),
         venueJa,
-        venueRomaji: venueRomaji.replace(/_/g, " "),
+        venueRomaji: titleCaseWords(venueRomajiRaw),
         ja: venueJa,
         addressJa: addressLine(c, "ja"),
         addressLine: hasAddr ? rawAddr : null,

@@ -408,6 +408,198 @@ function route() {
   return { screen: screen || "home", sub: sub || "" };
 }
 
+function syncHomeTreeButton() {
+  const btn = document.querySelector(".home__menu button");
+  const tree = $("#site-tree");
+  if (!btn || !tree) return;
+  btn.setAttribute("aria-expanded", tree.hidden ? "false" : "true");
+}
+
+const TREE_POS_KEY = "cookz-site-tree-pos";
+const TREE_POS_COOKZ_KEY = "cookz-site-tree-pos-cookz";
+
+function treePosStorageKey() {
+  return isCookzRoute() ? TREE_POS_COOKZ_KEY : TREE_POS_KEY;
+}
+
+function siteTreePlaceMode() {
+  return (
+    COOKZ_TREE_PLACE &&
+    isCookzRoute() &&
+    window.matchMedia("(min-width: 821px)").matches
+  );
+}
+
+function syncTreePlaceChrome() {
+  document.body.classList.toggle("is-tree-place", siteTreePlaceMode());
+}
+
+function openTreeForCookzPlacement() {
+  if (!siteTreePlaceMode()) return;
+  const tree = $("#site-tree");
+  if (!tree || !tree.hidden) return;
+  tree.hidden = false;
+  syncHomeTreeButton();
+  paintSiteTree();
+}
+
+function treeInicioBtn() {
+  return document.querySelector('#site-tree [data-tree="home"]');
+}
+
+function dropLegacyTreePos() {
+  [TREE_POS_KEY, TREE_POS_COOKZ_KEY].forEach((key) => {
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return;
+      const data = JSON.parse(raw);
+      if (!Number.isFinite(data.inicioTop)) localStorage.removeItem(key);
+    } catch {
+      try {
+        localStorage.removeItem(key);
+      } catch {
+        /* ignore */
+      }
+    }
+  });
+}
+
+function loadTreeInicioPos() {
+  try {
+    const raw = localStorage.getItem(treePosStorageKey());
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    if (!Number.isFinite(data.inicioTop)) return null;
+    if (!Number.isFinite(data.inicioLeft)) return null;
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+function saveTreeInicioPos() {
+  const inicio = treeInicioBtn();
+  if (!inicio) return;
+  const r = inicio.getBoundingClientRect();
+  const payload = {
+    inicioTop: Math.round(r.top),
+    inicioLeft: Math.round(r.left),
+  };
+  try {
+    localStorage.setItem(treePosStorageKey(), JSON.stringify(payload));
+  } catch {
+    /* ignore */
+  }
+}
+
+function applySavedInicioPos() {
+  const tree = $("#site-tree");
+  const saved = loadTreeInicioPos();
+  const inicio = treeInicioBtn();
+  if (!tree || !inicio || !saved) return false;
+  tree.style.right = "auto";
+  tree.style.left = `${saved.inicioLeft}px`;
+  setTreeTopForInicio(saved.inicioTop);
+  return true;
+}
+
+function treeAnchorGap() {
+  return Math.min(14, Math.max(6, window.innerHeight * 0.008));
+}
+
+function setTreeTopForInicio(targetInicioTop) {
+  const tree = $("#site-tree");
+  const inicio = treeInicioBtn();
+  if (!tree || !inicio || !Number.isFinite(targetInicioTop)) return;
+  const treeTop = tree.getBoundingClientRect().top;
+  const inicioTop = inicio.getBoundingClientRect().top;
+  tree.style.top = `${Math.round(treeTop + (targetInicioTop - inicioTop))}px`;
+}
+
+function positionSiteTree() {
+  const tree = $("#site-tree");
+  if (!tree || tree.hidden) return;
+  if (!window.matchMedia("(min-width: 821px)").matches) {
+    tree.style.removeProperty("top");
+    tree.style.removeProperty("left");
+    tree.style.removeProperty("right");
+    return;
+  }
+  const gap = treeAnchorGap();
+  const homeOn = document.querySelector('.frame[data-screen="home"].is-on');
+  if (homeOn) {
+    tree.style.left = "auto";
+    tree.style.right = "2.5vw";
+    const menuBtn = document.querySelector(".home__menu button");
+    if (menuBtn) {
+      setTreeTopForInicio(menuBtn.getBoundingClientRect().bottom + gap);
+    }
+    return;
+  }
+  if (applySavedInicioPos()) return;
+  tree.style.left = "2.3vw";
+  tree.style.right = "auto";
+  const logo =
+    document.querySelector(".logo-link--cookz .logo") ||
+    document.querySelector('.frame.is-on .logo');
+  if (!logo) {
+    tree.style.removeProperty("top");
+    return;
+  }
+  setTreeTopForInicio(logo.getBoundingClientRect().bottom + gap);
+}
+
+let siteTreeDrag = null;
+
+function bindSiteTreePlace() {
+  syncTreePlaceChrome();
+  if (!COOKZ_TREE_PLACE) return;
+  const tree = $("#site-tree");
+  if (!tree) return;
+
+  const onMove = (e) => {
+    if (!siteTreeDrag || e.pointerId !== siteTreeDrag.pointerId) return;
+    const dx = e.clientX - siteTreeDrag.x;
+    const dy = e.clientY - siteTreeDrag.y;
+    tree.style.right = "auto";
+    tree.style.left = `${Math.round(siteTreeDrag.left + dx)}px`;
+    tree.style.top = `${Math.round(siteTreeDrag.top + dy)}px`;
+  };
+
+  const endDrag = (e) => {
+    if (!siteTreeDrag || e.pointerId !== siteTreeDrag.pointerId) return;
+    tree.classList.remove("is-tree-dragging");
+    try {
+      tree.releasePointerCapture(e.pointerId);
+    } catch {
+      /* ignore */
+    }
+    siteTreeDrag = null;
+    saveTreeInicioPos();
+    removeEventListener("pointermove", onMove);
+    removeEventListener("pointerup", endDrag);
+    removeEventListener("pointercancel", endDrag);
+  };
+
+  tree.addEventListener("pointerdown", (e) => {
+    if (!siteTreePlaceMode() || tree.hidden || e.button !== 0) return;
+    const rect = tree.getBoundingClientRect();
+    siteTreeDrag = {
+      pointerId: e.pointerId,
+      x: e.clientX,
+      y: e.clientY,
+      left: rect.left,
+      top: rect.top,
+    };
+    tree.classList.add("is-tree-dragging");
+    tree.setPointerCapture(e.pointerId);
+    addEventListener("pointermove", onMove);
+    addEventListener("pointerup", endDrag);
+    addEventListener("pointercancel", endDrag);
+    e.preventDefault();
+  });
+}
+
 function paintSiteTree() {
   const { screen, sub } = route();
   const here = sub && sub !== "hub" ? sub : "";
@@ -415,6 +607,11 @@ function paintSiteTree() {
     const extra = btn.dataset.extra || "";
     btn.classList.toggle("is-on", btn.dataset.tree === screen && extra === here);
   });
+  if (isCookzRoute()) {
+    requestAnimationFrame(() => positionSiteTree());
+  } else {
+    positionSiteTree();
+  }
 }
 
 function go(screen, extra, replace) {
@@ -482,6 +679,8 @@ function renderCookzOrder(el, text) {
 // Ajustes de contenido apagados. Encender solo si el usuario dice
 // "activa los ajustes de contenido de cooks".
 const COOKZ_ADJUST = false;
+/** Colocación manual del árbol: solo activar en /cookz. Posición guardada aparte (`cookz-site-tree-pos-cookz`). */
+const COOKZ_TREE_PLACE = false;
 const COOKZ_EDIT_KEY = "cookz-edit";
 let cookzFrameOn = false;
 let cookzSlotVenue = null;
@@ -669,6 +868,14 @@ function applyCookzKanji(el, place) {
   el.style.transform = `translate(-50%, -50%) scale(${s})`;
 }
 
+function nhgOn() {
+  return document.documentElement.dataset.type === "nhg";
+}
+
+function nhgDisplaySize(size) {
+  return nhgOn() ? Math.min(size, 228) : size;
+}
+
 function fitCookzRomaji() {
   const el = document.querySelector("#cookz-romaji");
   const span = el?.querySelector("span");
@@ -678,7 +885,8 @@ function fitCookzRomaji() {
   span.style.fontSize = "100px";
   const width = span.getBoundingClientRect().width;
   if (!width) return;
-  span.style.fontSize = `${(100 * max) / width}px`;
+  span.style.fontSize = `${nhgDisplaySize((100 * max) / width)}px`;
+  if (nhgOn()) span.style.letterSpacing = "-0.04em";
 }
 
 function paintCookzMark(venue) {
@@ -1220,18 +1428,46 @@ function fitScreen() {
   stage.style.transform = "none";
 }
 
+function syncSiteTreeIfOpen() {
+  const tree = $("#site-tree");
+  if (tree && !tree.hidden) positionSiteTree();
+}
+
+function isCookzRoute() {
+  return route().screen === "cookz";
+}
+
+function cookzLogoHomeFrame() {
+  const cookz = document.querySelector('.frame[data-screen="cookz"]');
+  const lienzo = document.querySelector('.frame[data-screen="lienzo"]');
+  if (cookz?.classList.contains("is-on")) return cookz;
+  if (lienzo?.classList.contains("is-on")) return lienzo;
+  return cookz || lienzo;
+}
+
 function liftCookzLogo(on) {
-  const frame = document.querySelector('.frame[data-screen="cookz"]');
-  const link = frame?.querySelector("a:has(.logo)") || document.querySelector("a.logo-link--cookz");
-  if (!frame || !link) return;
-  if (on) {
-    document.body.append(link);
-    link.classList.add("logo-link--cookz");
+  const floating = document.querySelector("a.logo-link--cookz");
+  if (!on) {
+    if (!floating) return;
+    const homeName = floating.dataset.logoHome || "cookz";
+    const home = document.querySelector(`.frame[data-screen="${homeName}"]`);
+    home?.prepend(floating);
+    floating.classList.remove("logo-link--cookz");
+    delete floating.dataset.logoHome;
+    syncSiteTreeIfOpen();
     return;
   }
-  if (!link.classList.contains("logo-link--cookz")) return;
-  frame.prepend(link);
-  link.classList.remove("logo-link--cookz");
+  if (floating) {
+    syncSiteTreeIfOpen();
+    return;
+  }
+  const homeFrame = cookzLogoHomeFrame();
+  const link = homeFrame?.querySelector("a:has(.logo)");
+  if (!homeFrame || !link) return;
+  link.dataset.logoHome = homeFrame.dataset.screen || "cookz";
+  document.body.append(link);
+  link.classList.add("logo-link--cookz");
+  syncSiteTreeIfOpen();
 }
 
 function show(screen) {
@@ -1240,23 +1476,27 @@ function show(screen) {
     const on = frame.dataset.screen === screen || (keepLienzo && frame.dataset.screen === "lienzo");
     frame.classList.toggle("is-on", on);
   });
-  liftCookzLogo(screen === "cookz");
+  liftCookzLogo(isCookzRoute());
   fitScreen();
   if (screen === "japan2026") layoutJapan();
-  if (screen === "home") startHomeFlash();
+  if (screen === "home") {
+    startHomeFlash();
+    scheduleHomeDiaryFit();
+  }
+  syncSiteTreeIfOpen();
 
   const sub = screen === "konbini";
   $$("[data-kview]").forEach((el) => el.classList.toggle("is-on", sub && el.dataset.kview === konbiniView));
   const kTitle = document.querySelector('.frame[data-screen="konbini"] .section-title');
   if (kTitle && sub) {
     const names = {
-      hub: "Konbini",
-      "tickets-all": "tickets",
-      tracker: "tracker",
-      favos: "favos",
-      stats: "stats",
+      hub: t("titleKonbini"),
+      "tickets-all": t("konbiniTickets"),
+      tracker: t("konbiniTracker"),
+      favos: t("konbiniFavos"),
+      stats: t("konbiniStats"),
     };
-    kTitle.textContent = names[konbiniView] || "Konbini";
+    kTitle.textContent = names[konbiniView] || t("titleKonbini");
   }
   const nav = $("#side-nav");
   if (nav) {
@@ -1309,6 +1549,8 @@ function show(screen) {
     cookzWarmToken += 1;
     releaseScreen(screen);
   } else cookzWarmToken += 1;
+  syncTreePlaceChrome();
+  openTreeForCookzPlacement();
 }
 
 const LIENZO_NAME = 72;
@@ -1564,6 +1806,7 @@ function playCaseZoom() {
     frame.style.transform = "translate(0px, 0px) scale(1)";
     frame.classList.add("is-case-ready");
     openLienzoVenue.busy = false;
+    syncSiteTreeIfOpen();
   };
   lienzoCaseAnim.onfinish = settle;
   window.setTimeout(settle, LIENZO_ZOOM_MS + 80);
@@ -1849,6 +2092,41 @@ function bindPassed() {
   let placed = false;
   const note = $("#passed-note");
 
+  let addedTimer = 0;
+  let popTimer = 0;
+
+  const showAddedFeedback = () => {
+    const el = document.getElementById("passed-added");
+    if (!el) return;
+    el.textContent = copy().addedMsg;
+    el.hidden = false;
+    el.classList.add("is-on");
+    window.clearTimeout(addedTimer);
+    addedTimer = window.setTimeout(() => {
+      el.classList.remove("is-on");
+      el.hidden = true;
+    }, 2800);
+  };
+
+  const popVenueOnCanvas = (nombre) => {
+    board.querySelectorAll(".passed__pop").forEach((node) => node.remove());
+    window.clearTimeout(popTimer);
+    const pop = document.createElement("p");
+    pop.className = "passed__pop";
+    pop.textContent = nombre;
+    pop.setAttribute("role", "status");
+    board.append(pop);
+    if (!reduced()) {
+      requestAnimationFrame(() => pop.classList.add("is-on"));
+    } else {
+      pop.classList.add("is-on");
+    }
+    popTimer = window.setTimeout(() => {
+      pop.classList.add("is-out");
+      window.setTimeout(() => pop.remove(), 420);
+    }, reduced() ? 900 : 1400);
+  };
+
   const reduced = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const screenOn = () => board.closest(".frame")?.classList.contains("is-on");
   const foodLine = (text) => (text || "")
@@ -1858,35 +2136,92 @@ function bindPassed() {
     .join(", ");
   const PASSED_COPY = {
     en: {
-      lead: "My recommendation",
-      nombre: "Site name",
-      comida: "Try this!",
-      maps: "Paste the link",
+      titleLine1: "Passed",
+      titleLine2: "along",
+      modeAuto: "Auto",
+      modeManual: "Manual",
+      labelMaps: "Google Maps link",
+      labelNombre: "Place name",
+      labelCiudad: "City",
+      labelUbic: "Maps or address",
+      labelShare: "Whatever crosses your mind — a dish you loved or anything, really ^^",
+      labelShareKicker: "Note",
+      sharePh: "Say what you want…",
+      intro:
+        "This space is for sharing experiences: something you ate, a story, whatever feels right. Together we build a community canvas — and if someone is looking for somewhere to eat, they can follow your footprint.",
+      japanBanner: "Japan locations only!",
+      cityAll: "ALL",
+      cityPickLabel: "Places in this city",
+      cityUnknown: "No city",
+      mapsPh: "Paste the link",
+      nombrePh: "Name",
+      ciudadPh: "Tokyo, Kyoto…",
+      ubicPh: "Link or search",
       send: "Add",
+      addedMsg: "Added",
+      needFields: "Add a Maps link and your note.",
       link: "See location",
       maybe: "Maybe you meant this?",
-      japan: "japan spots only ;)",
-      linkOnly: "Paste the map link",
+      japan: "Japan locations only!",
+      linkOnly: "Paste a valid Maps link",
       check: "Couldn't check the link",
-      mapsOpen: "Open Maps",
-      mapsNote: "Search the spot, copy the link, paste it here.",
+      mapsOpen: "Open Google Maps",
+      mapsAutoNote: "Name, location and city are read from the link.",
+      parsed: "Detected",
+      parsedFail: "Couldn't read that link yet",
+      geoBtn: "Use my location",
+      geoBusy: "Locating…",
+      geoDenied: "Location blocked — allow it in the browser",
+      geoFail: "Couldn't read your location",
+      geoHere: "This spot",
     },
     es: {
-      lead: "Mi recomendación",
-      nombre: "Nombre del sitio",
-      comida: "Prueba esto!",
-      maps: "Pegar el link",
+      titleLine1: "Passed",
+      titleLine2: "along",
+      modeAuto: "Automático",
+      modeManual: "Manual",
+      labelMaps: "Enlace Google Maps",
+      labelNombre: "Nombre del sitio",
+      labelCiudad: "Ciudad",
+      labelUbic: "Maps o dirección",
+      labelShare:
+        "Comenta lo que se te pase por la cabeza, algún plato que te haya gustado o lo que quieras realmente ^^",
+      labelShareKicker: "Nota",
+      sharePh: "Lo que quieras contar…",
+      intro:
+        "En este espacio el objetivo realmente es que si quieres compartir experiencias, contar algo que hayas comido o realmente lo que te parezca puedas añadir tu contenido aquí. Así podemos ir creando juntos un canvas comunitario y si alguien prefiere no perderse y buscar un sitio para comer tenga una experiencia propia sobre un sitio con tu huella.",
+      japanBanner: "¡Solo ubicaciones en Japón!",
+      cityAll: "TODAS",
+      cityPickLabel: "Lugares en esta ciudad",
+      cityUnknown: "Sin ciudad",
+      mapsPh: "Pega el enlace",
+      nombrePh: "Nombre",
+      ciudadPh: "Tokio, Kioto…",
+      ubicPh: "Enlace o búsqueda",
       send: "Añadir",
+      addedMsg: "Añadido",
+      needFields: "Faltan el enlace de Maps y tu nota.",
       link: "Descubrir ubicación",
       maybe: "¿Tal vez te refieras a este?",
-      japan: "solo locales de japon ;)",
-      linkOnly: "Pega el enlace del mapa",
+      japan: "¡Solo ubicaciones en Japón!",
+      linkOnly: "Pega un enlace válido de Maps",
       check: "No pude comprobar el enlace",
-      mapsOpen: "Abrir Maps",
-      mapsNote: "Busca el sitio, copia el enlace y pégalo.",
+      mapsOpen: "Abrir Google Maps",
+      mapsAutoNote: "Nombre, ubicación y ciudad se leen del enlace.",
+      parsed: "Detectado",
+      parsedFail: "Aún no leo ese enlace",
+      geoBtn: "Usar mi ubicación",
+      geoBusy: "Localizando…",
+      geoDenied: "Ubicación bloqueada — actívala en el navegador",
+      geoFail: "No pude leer tu ubicación",
+      geoHere: "Aquí",
     },
   };
   let passedLang = siteLang === "en" ? "en" : "es";
+  let passedFormMode = "auto";
+  let autoDraft = null;
+  let parseTimer = 0;
+  let passedCityFilter = "";
   let remoteNotes = [];
   let remoteReady = false;
   const passedHeaders = {
@@ -1928,7 +2263,7 @@ function bindPassed() {
     return ka === kb || kb.startsWith(`${ka} `) || ka.startsWith(`${kb} `);
   };
   const matchSite = (nombre) => {
-    const hits = entries().filter((entry) => sameSite(entry.nombre, nombre));
+    const hits = buildEntriesList().filter((entry) => sameSite(entry.nombre, nombre));
     hits.sort((a, b) =>
       Math.abs(siteKey(a.nombre).length - siteKey(nombre).length)
       - Math.abs(siteKey(b.nombre).length - siteKey(nombre).length));
@@ -2018,8 +2353,12 @@ function bindPassed() {
     } catch { return ""; }
   };
   const placeInJapan = async (text) => {
-    const link = asMapUrl(text);
-    if (!link) return "link";
+    const raw = String(text || "").trim();
+    const link = asMapUrl(raw);
+    if (!link) {
+      if (raw.length > 3) return countryAt(null, raw);
+      return "link";
+    }
     let coords = coordsOf(link);
     let q = coords ? "" : queryOf(link);
     if (!coords && !q) {
@@ -2029,6 +2368,163 @@ function bindPassed() {
     }
     if (!coords && !q) return "check";
     return countryAt(coords, q);
+  };
+  const photonProps = (feature) => feature?.properties || {};
+  const cityFromFeature = (p) =>
+    p.city || p.town || p.village || p.district || p.county || p.state || "";
+  const nameFromPhoton = (p) => {
+    if (p.name) return String(p.name).trim();
+    const street = [p.street, p.housenumber].filter(Boolean).join(" ").trim();
+    if (street) return street;
+    const city = cityFromFeature(p);
+    if (city) return city;
+    return copy().geoHere || "Here";
+  };
+  const mapsLinkFromCoords = (lat, lon) =>
+    `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${lat},${lon}`)}`;
+  const reversePhotonAt = async (lat, lon) => {
+    try {
+      const res = await fetch(
+        `https://photon.komoot.io/reverse?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`,
+      );
+      if (!res.ok) return null;
+      const data = await res.json();
+      const p = photonProps(data.features?.[0]);
+      return p || null;
+    } catch {
+      return null;
+    }
+  };
+  const placeFromCoords = async (lat, lon) => {
+    const p = await reversePhotonAt(lat, lon);
+    const maps = mapsLinkFromCoords(lat, lon);
+    if (!p) {
+      return {
+        nombre: copy().geoHere || "Here",
+        city: "",
+        maps,
+      };
+    }
+    if (p.countrycode && p.countrycode !== "JP") return { error: "japan" };
+    return {
+      nombre: nameFromPhoton(p),
+      city: cityFromFeature(p),
+      maps,
+    };
+  };
+  const readGeolocation = () =>
+    new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error("unsupported"));
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        (pos) => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
+        (err) => reject(err),
+        { enableHighAccuracy: true, timeout: 14000, maximumAge: 45000 },
+      );
+    });
+  const applyPlaceToForm = (place) => {
+    if (passedFormMode === "auto") {
+      const input = form?.querySelector('[name="maps_auto"]');
+      if (input) input.value = place.maps;
+      autoDraft = place;
+      const el = document.getElementById("passed-parsed");
+      if (el) {
+        const bit = [place.nombre, place.city].filter(Boolean).join(" · ");
+        el.textContent = `${copy().parsed}: ${bit}`;
+        el.hidden = false;
+      }
+    } else {
+      const nombre = form?.querySelector('[name="nombre"]');
+      const ciudad = form?.querySelector('[name="ciudad"]');
+      const manualMaps = form?.querySelector('[name="maps_manual"]');
+      if (nombre) nombre.value = place.nombre;
+      if (ciudad) ciudad.value = place.city || "";
+      if (manualMaps) manualMaps.value = place.maps;
+    }
+    syncMaps();
+  };
+  const fillFromCurrentLocation = async () => {
+    const btn = document.getElementById("passed-geo");
+    const idle = copy().geoBtn;
+    hideHint();
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = copy().geoBusy;
+    }
+    try {
+      const { lat, lon } = await readGeolocation();
+      const place = await placeFromCoords(lat, lon);
+      if (place?.error) {
+        showHint(place.error);
+        return;
+      }
+      if (!place?.maps) {
+        showHint("geoFail");
+        return;
+      }
+      applyPlaceToForm(place);
+    } catch (err) {
+      const code = err?.code;
+      showHint(code === 1 ? "geoDenied" : "geoFail");
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = idle;
+      }
+    }
+  };
+  const placeNameFromLanded = (landed, q) => {
+    if (q) {
+      const first = q.split(",")[0].trim();
+      if (first) return first.replace(/\+/g, " ");
+    }
+    try {
+      const u = new URL(landed);
+      const m = u.pathname.match(/\/place\/([^/]+)/);
+      if (m) return decodeURIComponent(m[1].replace(/\+/g, " ")).split(",")[0].trim();
+    } catch { /* not a url */ }
+    return "";
+  };
+  const extractPlaceFromMaps = async (text) => {
+    const link = asMapUrl(text);
+    if (!link) return null;
+    let landed = link;
+    if (!coordsOf(link) && !queryOf(link)) {
+      const expanded = await expandMapLink(link);
+      if (expanded) landed = expanded;
+    }
+    const coords = coordsOf(landed);
+    let q = queryOf(landed) || queryOf(link);
+    let nombre = placeNameFromLanded(landed, q);
+    let city = "";
+    let p = null;
+    if (coords) {
+      p = await reversePhotonAt(coords.lat, coords.lon);
+      if (p) {
+        city = cityFromFeature(p);
+        if (!nombre || nombre.length < 2 || /^\d/.test(nombre)) nombre = nameFromPhoton(p);
+        if (p.countrycode && p.countrycode !== "JP") return null;
+      }
+    }
+    if (!p && q) {
+      for (const variant of queryVariants(q)) {
+        try {
+          const res = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(variant)}&limit=3`);
+          if (!res.ok) continue;
+          const data = await res.json();
+          const hit = (data.features || []).find((f) => photonProps(f).countrycode === "JP");
+          if (!hit) continue;
+          p = photonProps(hit);
+          city = cityFromFeature(p);
+          if (!nombre) nombre = nameFromPhoton(p);
+          break;
+        } catch { /* offline */ }
+      }
+    }
+    if (!nombre) return null;
+    return { nombre, maps: link, city };
   };
   let hintKind = "";
   let hintEntry = null;
@@ -2064,32 +2560,121 @@ function bindPassed() {
   };
   const fitFood = () => {
     const field = form?.querySelector('[name="comida"]');
-    if (!field) return;
-    const max = 22;
-    const min = 11;
-    let size = max;
-    field.style.fontSize = `${size}px`;
-    while (size > min && field.scrollHeight > field.clientHeight + 1) {
-      size -= 1;
-      field.style.fontSize = `${size}px`;
+    if (field) field.style.fontSize = "";
+  };
+  const setPanelFieldsEnabled = (panel, on) => {
+    if (!panel) return;
+    panel.querySelectorAll("input, textarea, select").forEach((field) => {
+      field.disabled = !on;
+    });
+  };
+  const setPassedMode = (mode) => {
+    passedFormMode = mode === "manual" ? "manual" : "auto";
+    form?.querySelectorAll(".passed-form__mode-btn").forEach((btn) => {
+      btn.classList.toggle("is-on", btn.dataset.passedMode === passedFormMode);
+    });
+    const autoPanel = form?.querySelector('[data-passed-panel="auto"]');
+    const manualPanel = form?.querySelector('[data-passed-panel="manual"]');
+    const autoOn = passedFormMode === "auto";
+    const manualOn = passedFormMode === "manual";
+    if (autoPanel) autoPanel.hidden = !autoOn;
+    if (manualPanel) manualPanel.hidden = !manualOn;
+    setPanelFieldsEnabled(autoPanel, autoOn);
+    setPanelFieldsEnabled(manualPanel, manualOn);
+    const autoMaps = form?.querySelector('[name="maps_auto"]');
+    const manualMaps = form?.querySelector('[name="maps_manual"]');
+    const nombre = form?.querySelector('[name="nombre"]');
+    if (autoMaps) autoMaps.required = autoOn;
+    if (manualMaps) manualMaps.required = manualOn;
+    if (nombre) nombre.required = manualOn;
+    paintParsed();
+  };
+  const paintParsed = async () => {
+    const el = document.getElementById("passed-parsed");
+    if (!el || passedFormMode !== "auto") {
+      if (el) el.hidden = true;
+      autoDraft = null;
+      return;
     }
+    const maps = form?.querySelector('[name="maps_auto"]')?.value.trim();
+    if (!maps) {
+      el.hidden = true;
+      autoDraft = null;
+      return;
+    }
+    const parsed = await extractPlaceFromMaps(maps);
+    autoDraft = parsed;
+    if (!parsed) {
+      el.textContent = copy().parsedFail;
+      el.hidden = false;
+      return;
+    }
+    const bit = [parsed.nombre, parsed.city].filter(Boolean).join(" · ");
+    el.textContent = `${copy().parsed}: ${bit}`;
+    el.hidden = false;
+    syncMaps();
+  };
+  const scheduleParse = () => {
+    window.clearTimeout(parseTimer);
+    parseTimer = window.setTimeout(() => { paintParsed(); }, 420);
   };
   const paintForm = () => {
     const text = copy();
-    const lead = form?.querySelector(".passed-form__lead");
-    if (lead) lead.textContent = text.lead;
-    ["nombre", "comida", "maps"].forEach((key) => {
-      const field = form?.querySelector(`[name="${key}"]`);
-      if (!field) return;
-      field.placeholder = text[key];
-      field.setAttribute("aria-label", text[key]);
+    form?.querySelectorAll(".passed-form__mode-btn").forEach((btn) => {
+      const key = btn.dataset.passedMode === "manual" ? "modeManual" : "modeAuto";
+      btn.textContent = text[key];
+    });
+    const labels = {
+      maps_auto: "labelMaps",
+      nombre: "labelNombre",
+      ciudad: "labelCiudad",
+      maps_manual: "labelUbic",
+    };
+    Object.entries(labels).forEach(([name, key]) => {
+      const field = form?.querySelector(`[name="${name}"]`);
+      const label = field?.closest(".passed-form__field")?.querySelector(".passed-form__label");
+      if (label) label.textContent = text[key];
+    });
+    const shareKicker = form?.querySelector(".passed-form__share .passed-form__label");
+    if (shareKicker) shareKicker.textContent = text.labelShareKicker;
+    const sharePrompt = document.getElementById("passed-share-prompt");
+    if (sharePrompt) sharePrompt.textContent = text.labelShare;
+    const pickLabel = document.getElementById("passed-city-pick-label");
+    if (pickLabel) pickLabel.textContent = text.cityPickLabel;
+    const ph = {
+      maps_auto: "mapsPh",
+      nombre: "nombrePh",
+      ciudad: "ciudadPh",
+      maps_manual: "ubicPh",
+      comida: "sharePh",
+    };
+    Object.entries(ph).forEach(([name, key]) => {
+      const field = form?.querySelector(`[name="${name}"]`);
+      if (field) {
+        field.placeholder = text[key];
+        field.setAttribute("aria-label", text[key]);
+      }
     });
     const send = form?.querySelector(".passed-form__send");
     if (send) send.textContent = text.send;
     const mapsGo = form?.querySelector(".passed-form__maps");
     if (mapsGo) mapsGo.textContent = text.mapsOpen;
     const mapsNote = form?.querySelector(".passed-form__maps-note");
-    if (mapsNote) mapsNote.textContent = text.mapsNote;
+    if (mapsNote) mapsNote.textContent = text.mapsAutoNote;
+    const geoBtn = document.getElementById("passed-geo");
+    if (geoBtn && !geoBtn.disabled) geoBtn.textContent = text.geoBtn;
+    const intro = document.getElementById("passed-intro");
+    if (intro) intro.textContent = text.intro;
+    const titleLines = document.querySelectorAll("#passed-side-title .passed-side__title-line");
+    if (titleLines.length >= 2) {
+      titleLines[0].textContent = text.titleLine1;
+      titleLines[1].textContent = text.titleLine2;
+    }
+    const sideTitle = document.getElementById("passed-side-title");
+    if (sideTitle) sideTitle.setAttribute("aria-label", `${text.titleLine1} ${text.titleLine2}`);
+    const japanNote = document.getElementById("passed-japan-note");
+    if (japanNote) japanNote.textContent = text.japanBanner;
+    setPassedMode(passedFormMode);
     syncMaps();
     paintHint();
     fitFood();
@@ -2097,7 +2682,12 @@ function bindPassed() {
   const syncMaps = () => {
     const mapsGo = form?.querySelector(".passed-form__maps");
     if (!mapsGo) return;
-    const nombre = form.querySelector('[name="nombre"]')?.value.trim();
+    let nombre = "";
+    if (passedFormMode === "manual") {
+      nombre = form.querySelector('[name="nombre"]')?.value.trim();
+    } else {
+      nombre = autoDraft?.nombre || "";
+    }
     mapsGo.href = nombre
       ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${nombre} Japan`)}`
       : "https://www.google.com/maps";
@@ -2106,12 +2696,16 @@ function bindPassed() {
     const source = typeof COOKS !== "undefined" ? COOKS.find((item) => item.id === venue.id) : null;
     return source?.order?.[passedLang] || "";
   };
-  const entries = () => {
-    const cooks = VENUES.map((venue) => ({
-      nombre: (venue.venueRomaji || venue.name || "").replace(/_/g, " "),
-      maps: venue.mapsUrl || venue.addressLine || "",
-      comida: foodLine(orderOf(venue)),
-    })).filter((entry) => entry.nombre);
+  const buildEntriesList = () => {
+    const cooks = VENUES.map((venue) => {
+      const cook = typeof COOKS !== "undefined" ? COOKS.find((item) => item.id === venue.id) : null;
+      return {
+        nombre: (venue.venueRomaji || venue.name || "").replace(/_/g, " "),
+        maps: venue.mapsUrl || venue.addressLine || "",
+        comida: foodLine(orderOf(venue)),
+        city: cook?.city?.[passedLang] || cook?.city?.es || "",
+      };
+    }).filter((entry) => entry.nombre);
     const notes = remoteReady ? remoteNotes : localNotes();
     notes.forEach((item) => {
       if (!item?.nombre) return;
@@ -2119,11 +2713,190 @@ function bindPassed() {
         nombre: String(item.nombre),
         maps: String(item.maps || ""),
         comida: String(item.comida || ""),
+        city: String(item.city || ""),
       };
       if (cooks.some((row) => sameNote(row, next))) return;
       cooks.push(next);
     });
     return cooks;
+  };
+  const cityForEntry = (entry) => {
+    if (entry.city) return entry.city;
+    const venue = VENUES.find((v) => sameSite((v.venueRomaji || v.name || "").replace(/_/g, " "), entry.nombre));
+    if (venue) {
+      const cook = typeof COOKS !== "undefined" ? COOKS.find((item) => item.id === venue.id) : null;
+      return cook?.city?.[passedLang] || cook?.city?.es || "";
+    }
+    return "";
+  };
+  const sortByCity = (list) =>
+    [...list].sort((a, b) => {
+      const ca = cityForEntry(a).toLowerCase();
+      const cb = cityForEntry(b).toLowerCase();
+      if (ca !== cb) return ca.localeCompare(cb, passedLang);
+      return a.nombre.localeCompare(b.nombre, passedLang);
+    });
+  const entries = () => sortByCity(buildEntriesList());
+
+  const cityKeyNorm = (value) => String(value || "").trim().toLowerCase();
+
+  const citiesInEntries = () => {
+    const map = new Map();
+    entries().forEach((entry) => {
+      const label = cityForEntry(entry).trim();
+      if (!label) return;
+      const key = cityKeyNorm(label);
+      if (!key || map.has(key)) return;
+      map.set(key, label);
+    });
+    return [...map.values()].sort((a, b) => a.localeCompare(b, passedLang));
+  };
+
+  const applyCityFilter = () => {
+    board.querySelectorAll(".passed__word").forEach((word) => {
+      const key = cityKeyNorm(word.dataset.city || "");
+      const match = !passedCityFilter || key === passedCityFilter;
+      word.classList.toggle("is-filtered-out", !match);
+    });
+  };
+
+  const jumpToVenue = (nombre) => {
+    const words = [...board.querySelectorAll(".passed__word")].filter(
+      (w) => w.dataset.nombre === nombre && !w.classList.contains("is-filtered-out"),
+    );
+    const word = words[0];
+    if (!word) return;
+    if (window.matchMedia("(max-width: 820px)").matches) {
+      word.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+    openNote(word);
+  };
+
+  const paintCityPickList = () => {
+    const wrap = document.getElementById("passed-city-pick");
+    const list = document.getElementById("passed-city-pick-list");
+    if (!wrap || !list) return;
+    if (!passedCityFilter) {
+      wrap.hidden = true;
+      list.replaceChildren();
+      return;
+    }
+    const items = sortByCity(entries()).filter(
+      (entry) => cityKeyNorm(cityForEntry(entry)) === passedCityFilter,
+    );
+    list.replaceChildren();
+    items.forEach((entry) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.textContent = entry.nombre;
+      btn.addEventListener("click", () => jumpToVenue(entry.nombre));
+      list.append(btn);
+    });
+    wrap.hidden = items.length === 0;
+  };
+
+  const paintCityFilter = () => {
+    const bar = document.getElementById("passed-city-bar");
+    if (!bar) return;
+    const text = copy();
+    const cities = citiesInEntries();
+    if (passedCityFilter && !cities.some((city) => cityKeyNorm(city) === passedCityFilter)) {
+      passedCityFilter = "";
+    }
+    const options = [{ value: "", label: text.cityAll }, ...cities.map((city) => ({
+      value: cityKeyNorm(city),
+      label: city,
+    }))];
+    const current = options.find((opt) => opt.value === passedCityFilter) || options[0];
+    bar.replaceChildren();
+    const drop = document.createElement("div");
+    drop.className = "passed-city-bar__drop";
+    const menu = document.createElement("ul");
+    menu.className = "passed-city-bar__menu";
+    menu.hidden = false;
+    menu.setAttribute("role", "listbox");
+    menu.setAttribute("aria-label", text.cityAll);
+    menu.setAttribute("aria-hidden", "true");
+    const trigger = document.createElement("button");
+    trigger.type = "button";
+    trigger.className = "passed-city-bar__trigger";
+    trigger.setAttribute("aria-haspopup", "listbox");
+    trigger.setAttribute("aria-expanded", "false");
+    trigger.textContent = current.label;
+    const setOpen = (open) => {
+      trigger.setAttribute("aria-expanded", open ? "true" : "false");
+      menu.setAttribute("aria-hidden", open ? "false" : "true");
+      if (open) {
+        requestAnimationFrame(() => {
+          drop.classList.add("is-open");
+        });
+        return;
+      }
+      drop.classList.remove("is-open");
+    };
+    const pick = (value) => {
+      passedCityFilter = value;
+      const next = options.find((opt) => opt.value === value) || options[0];
+      trigger.textContent = next.label;
+      menu.querySelectorAll(".passed-city-bar__option").forEach((btn) => {
+        btn.classList.toggle("is-on", btn.dataset.value === value);
+      });
+      setOpen(false);
+      applyCityFilter();
+      paintCityPickList();
+    };
+    options.forEach((opt, index) => {
+      const item = document.createElement("li");
+      item.style.setProperty("--item-i", String(index));
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = `passed-city-bar__option${opt.value === passedCityFilter ? " is-on" : ""}`;
+      btn.dataset.value = opt.value;
+      btn.setAttribute("role", "option");
+      btn.textContent = opt.label;
+      btn.addEventListener("pointerdown", (e) => {
+        e.stopPropagation();
+      });
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        pick(opt.value);
+      });
+      item.append(btn);
+      menu.append(item);
+    });
+    trigger.addEventListener("pointerdown", (e) => {
+      e.stopPropagation();
+    });
+    trigger.addEventListener("click", (e) => {
+      e.stopPropagation();
+      setOpen(!drop.classList.contains("is-open"));
+    });
+    drop.append(menu, trigger);
+    bar.append(drop);
+  };
+
+  const closePassedCityMenu = () => {
+    const drop = document.querySelector("#passed-city-bar .passed-city-bar__drop");
+    const trigger = document.querySelector("#passed-city-bar .passed-city-bar__trigger");
+    const menu = document.querySelector("#passed-city-bar .passed-city-bar__menu");
+    if (!drop?.classList.contains("is-open")) return;
+    drop.classList.remove("is-open");
+    trigger?.setAttribute("aria-expanded", "false");
+    menu?.setAttribute("aria-hidden", "true");
+  };
+
+  if (!board.dataset.cityDropBound) {
+    board.dataset.cityDropBound = "1";
+    document.addEventListener("pointerdown", (e) => {
+      if (e.target.closest(".passed-city-bar__drop")) return;
+      closePassedCityMenu();
+    });
+  }
+
+  const finishBuild = () => {
+    paintCityFilter();
+    applyCityFilter();
+    paintCityPickList();
   };
 
   const paint = () => {
@@ -2155,9 +2928,11 @@ function bindPassed() {
         word.dataset.nombre = entry.nombre;
         word.dataset.maps = entry.maps;
         word.dataset.comida = entry.comida;
+        word.dataset.city = cityForEntry(entry);
         cell.append(word);
       });
       world.append(cell);
+      finishBuild();
       return;
     }
     const tileW = Math.max(Math.ceil(box.width * 1.7), 1280);
@@ -2199,11 +2974,13 @@ function bindPassed() {
           word.dataset.nombre = entry.nombre;
           word.dataset.maps = entry.maps;
           word.dataset.comida = entry.comida;
+          word.dataset.city = cityForEntry(entry);
           cell.append(word);
         });
         world.append(cell);
       }
     }
+    finishBuild();
   };
 
   const hideNote = () => {
@@ -2215,7 +2992,7 @@ function bindPassed() {
     const nombre = word.dataset.nombre || "";
     const maps = word.dataset.maps || "";
     const comida = word.dataset.comida || "";
-    note.querySelector(".passed-note__name").textContent = nombre;
+    note.querySelector(".passed-note__name").textContent = [nombre, word.dataset.city].filter(Boolean).join(" · ") || nombre;
     const link = note.querySelector(".passed-note__link");
     const food = note.querySelector(".passed-note__food");
     const url = /^https?:\/\//i.test(maps);
@@ -2315,6 +3092,7 @@ function bindPassed() {
   });
   board.addEventListener("pointerdown", (e) => {
     if (phone()) return;
+    if (e.target.closest(".passed-city-bar")) return;
     if (e.button !== 0) return;
     e.preventDefault();
     mode = "drag";
@@ -2398,16 +3176,56 @@ function bindPassed() {
   });
 
   if (form) {
+    form.querySelectorAll(".passed-form__mode-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        setPassedMode(btn.dataset.passedMode);
+      });
+    });
+    document.getElementById("passed-geo")?.addEventListener("click", () => {
+      fillFromCurrentLocation();
+    });
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       if (form.dataset.sending === "1") return;
+      hideHint();
       const data = new FormData(form);
-      const note = {
-        maps: String(data.get("maps") || "").trim(),
-        nombre: String(data.get("nombre") || "").trim(),
-        comida: String(data.get("comida") || "").trim(),
-      };
-      if (!note.maps || !note.nombre || !note.comida) return;
+      const comida = String(data.get("comida") || "").trim();
+      if (passedFormMode === "auto") {
+        const maps = String(data.get("maps_auto") || "").trim();
+        if (!maps || !comida) {
+          showHint("needFields");
+          if (!maps) form.querySelector('[name="maps_auto"]')?.focus();
+          else form.querySelector('[name="comida"]')?.focus();
+          return;
+        }
+      } else {
+        const nombre = String(data.get("nombre") || "").trim();
+        const maps = String(data.get("maps_manual") || "").trim();
+        if (!nombre || !maps || !comida) {
+          showHint("needFields");
+          if (!nombre) form.querySelector('[name="nombre"]')?.focus();
+          else if (!maps) form.querySelector('[name="maps_manual"]')?.focus();
+          else form.querySelector('[name="comida"]')?.focus();
+          return;
+        }
+      }
+      let note;
+      if (passedFormMode === "auto") {
+        const maps = String(data.get("maps_auto") || "").trim();
+        const parsed = autoDraft || await extractPlaceFromMaps(maps);
+        if (!parsed?.nombre) {
+          showHint("linkOnly");
+          return;
+        }
+        note = { nombre: parsed.nombre, maps: parsed.maps, comida, city: parsed.city || "" };
+      } else {
+        note = {
+          nombre: String(data.get("nombre") || "").trim(),
+          maps: String(data.get("maps_manual") || "").trim(),
+          comida,
+          city: String(data.get("ciudad") || "").trim(),
+        };
+      }
       const existing = matchSite(note.nombre);
       if (existing) {
         showHint("maybe", existing);
@@ -2415,15 +3233,14 @@ function bindPassed() {
       }
       form.dataset.sending = "1";
       const send = form.querySelector(".passed-form__send");
+      try {
       const where = await placeInJapan(note.maps);
       if (where !== "jp") {
-        form.dataset.sending = "";
         showHint(where === "link" ? "linkOnly" : where === "check" ? "check" : "japan");
         return;
       }
       let ok = false;
       try { ok = await insertPassed(note); } catch { ok = false; }
-      form.dataset.sending = "";
       if (!ok) {
         if (send) {
           const fail = t("notSaved");
@@ -2435,14 +3252,21 @@ function bindPassed() {
       if (!remoteNotes.some((row) => sameNote(row, note))) remoteNotes.push(note);
       remoteReady = true;
       hideHint();
+      autoDraft = null;
       form.reset();
       paintForm();
       build();
       paint();
+      popVenueOnCanvas(note.nombre);
+      showAddedFeedback();
+      } finally {
+        form.dataset.sending = "";
+      }
     });
     form.addEventListener("input", (e) => {
       hideHint();
       if (e.target?.name === "nombre") syncMaps();
+      if (e.target?.name === "maps_auto") scheduleParse();
       if (e.target?.name === "comida") fitFood();
     });
     form.querySelector(".passed-form__hint-site")?.addEventListener("click", (e) => {
@@ -2468,7 +3292,12 @@ function bindPassed() {
       if (remoteNotes.some((row) => sameNote(row, item))) continue;
       let ok = false;
       try { ok = await insertPassed(item); } catch { ok = false; }
-      if (ok) remoteNotes.push({ nombre: item.nombre, comida: item.comida, maps: item.maps });
+      if (ok) remoteNotes.push({
+        nombre: item.nombre,
+        comida: item.comida,
+        maps: item.maps,
+        city: item.city || "",
+      });
       else left.push(item);
     }
     if (left.length) localStorage.setItem(PASSED_KEY, JSON.stringify(left));
@@ -2546,6 +3375,9 @@ function apply() {
       playCaseZoom();
     }
   }
+  syncSiteTreeIfOpen();
+  syncTreePlaceChrome();
+  openTreeForCookzPlacement();
 }
 
 function buildCookzList(container) {
@@ -2554,7 +3386,7 @@ function buildCookzList(container) {
     if (i > 0) container.append(document.createTextNode(" "));
     const btn = document.createElement("button");
     btn.type = "button";
-    btn.textContent = venue.name.replace(/_/g, " ").toUpperCase();
+    btn.textContent = venue.venueRomaji || venue.name;
     btn.addEventListener("mouseenter", () => {
       hovering = i;
       paintCookz();
@@ -3026,39 +3858,11 @@ function syncJapanMark() {
 }
 
 function syncJapanLogo() {
-  const frame = document.querySelector('.frame[data-screen="japan2026"]');
-  const base = frame?.querySelector(".logo:not(.logo--mix)");
-  const mix = frame?.querySelector(".logo--mix");
-  if (!base || !mix) return;
-  const lr = base.getBoundingClientRect();
-  let hit = null;
-  let area = 0;
-  frame.querySelectorAll(".j-card--konbini .j-card__film").forEach((video) => {
-    const vr = video.getBoundingClientRect();
-    const left = Math.max(lr.left, vr.left);
-    const right = Math.min(lr.right, vr.right);
-    const top = Math.max(lr.top, vr.top);
-    const bottom = Math.min(lr.bottom, vr.bottom);
-    const w = right - left;
-    const h = bottom - top;
-    if (w > 0.5 && h > 0.5 && w * h > area) {
-      area = w * h;
-      hit = { x: left - lr.left, y: top - lr.top, w, h };
-    }
-  });
+  const base = document.querySelector('.frame[data-screen="japan2026"] .logo');
+  if (!base) return;
   base.style.maskImage = "";
   base.style.webkitMaskImage = "";
-  if (!hit) {
-    base.style.clipPath = "";
-    mix.style.clipPath = "inset(100%)";
-    return;
-  }
-  const right = Math.max(0, lr.width - (hit.x + hit.w));
-  const bottom = Math.max(0, lr.height - (hit.y + hit.h));
-  const x2 = hit.x + hit.w;
-  const y2 = hit.y + hit.h;
-  mix.style.clipPath = `inset(${hit.y}px ${right}px ${bottom}px ${hit.x}px)`;
-  base.style.clipPath = `path(evenodd, "M 0 0 H ${lr.width} V ${lr.height} H 0 Z M ${hit.x} ${hit.y} H ${x2} V ${y2} H ${hit.x} Z")`;
+  base.style.clipPath = "";
 }
 
 function japanTick() {
@@ -3200,13 +4004,6 @@ function initJapanMotion() {
       { passive: true },
     );
   });
-
-  const blend = document.getElementById("j-logo-blend");
-  const mix = japan.querySelector(".logo--mix");
-  if (blend && mix) {
-    mix.style.mixBlendMode = "saturation";
-    blend.value = "saturation";
-  }
 }
 
 function centerJapanKonbini() {
@@ -3542,6 +4339,11 @@ function bindFavosFilm() {
   const play = () => {
     if (riding || holding || view.classList.contains("is-on")) return;
     if (video.ended || atEnd()) return;
+    ensureSrc();
+    if (video.readyState < 2) {
+      video.addEventListener("loadeddata", () => video.play().catch(() => {}), { once: true });
+      return;
+    }
     video.play().catch(() => {});
   };
   const pause = () => {
@@ -3663,13 +4465,27 @@ function placeHomeFace(img) {
   );
   const coverW = Math.max(cx / fx, (rush.width - cx) / (1 - fx));
   const coverH = Math.max(cy / fy, (rush.height - cy) / (1 - fy));
-  const scale = Math.max(faceScale, (coverW + 8) / img.naturalWidth, (coverH + 8) / img.naturalHeight);
+  const scale = Math.max(
+    faceScale,
+    (coverW + 8) / img.naturalWidth,
+    (coverH + 48) / img.naturalHeight
+  );
   const dw = img.naturalWidth * scale;
   const dh = img.naturalHeight * scale;
+  let left = cx - face.x * dw;
+  let top = cy - face.y * dh;
   img.style.width = `${dw}px`;
   img.style.height = `${dh}px`;
-  img.style.left = `${cx - face.x * dw}px`;
-  img.style.top = `${cy - face.y * dh}px`;
+  img.style.left = `${left}px`;
+  img.style.top = `${top}px`;
+  const imgBottom = top + dh;
+  if (imgBottom < rush.height - 1) top += rush.height - imgBottom;
+  const imgRight = left + dw;
+  if (imgRight < rush.width - 1) left += rush.width - imgRight;
+  if (top < 0) top = 0;
+  if (left < 0) left = 0;
+  img.style.left = `${left}px`;
+  img.style.top = `${top}px`;
 }
 
 function startHomeFlash() {
@@ -3759,6 +4575,7 @@ function startHomeFlash() {
       return;
     }
     placeHomeFace(hidden);
+    scheduleHomeDiaryFit();
     hidden.classList.add("is-on");
     shown.classList.remove("is-on");
     const next = shown;
@@ -3776,10 +4593,43 @@ function startHomeFlash() {
   step();
 }
 
+function scheduleHomeDiaryFit() {
+  fitHomeDiary();
+  requestAnimationFrame(() => fitHomeDiary());
+  document.fonts?.ready?.then(() => fitHomeDiary()).catch(() => {});
+}
+
+function flushHomeDiary(el) {
+  if (!el || !document.querySelector('.frame[data-screen="home"].is-on')) return;
+  const nodes = [...el.querySelectorAll(".home__diary-full, .home__diary-word")].filter(
+    (node) => !node.hidden && getComputedStyle(node).display !== "none"
+  );
+  const target = nodes[nodes.length - 1] || nodes[0];
+  if (!target) return;
+
+  const pin = () => {
+    el.style.transform = "";
+    target.style.transform = "";
+    const floor = window.visualViewport?.height ?? window.innerHeight;
+    const mobile = window.matchMedia("(max-width: 820px)").matches;
+    const lift = mobile ? Math.round(floor * 0.016) : 0;
+    const rects = [...target.getClientRects()];
+    const inkBottom = rects.length
+      ? Math.max(...rects.map((r) => r.bottom))
+      : target.getBoundingClientRect().bottom;
+    const shift = floor - inkBottom - lift;
+    if (Math.abs(shift) > 0.25) el.style.transform = `translateY(${Math.round(shift)}px)`;
+    else el.style.transform = "";
+  };
+
+  pin();
+  requestAnimationFrame(pin);
+}
+
 function fitHomeDiary() {
   const el = document.querySelector(".home__diary");
   const span = el?.querySelector(".home__diary-full");
-  if (!span) return;
+  if (!span || !el) return;
   const words = [...el.querySelectorAll(".home__diary-word")];
   const mobile = window.matchMedia("(max-width: 820px)").matches && words.length === 3;
   if (!mobile) {
@@ -3788,35 +4638,50 @@ function fitHomeDiary() {
       word.style.display = "none";
       word.style.fontSize = "";
       word.style.letterSpacing = "";
+      word.style.transform = "";
     });
     span.hidden = false;
     span.style.display = "";
+    span.style.transform = "";
     const max = el.clientWidth;
-    if (!max) return;
-    span.style.fontSize = "100px";
-    const width = span.scrollWidth;
-    if (!width) return;
-    span.style.fontSize = `${(100 * max) / width}px`;
+    if (max) {
+      span.style.fontSize = "100px";
+      const width = span.scrollWidth;
+      if (width) {
+        span.style.fontSize = `${nhgDisplaySize((100 * max) / width)}px`;
+        if (nhgOn()) span.style.letterSpacing = "-0.04em";
+      }
+    }
+    flushHomeDiary(el);
     return;
   }
   span.hidden = true;
   span.style.display = "none";
+  span.style.transform = "";
   words.forEach((word) => {
     word.hidden = false;
     word.style.display = "";
+    word.style.transform = "";
   });
   const max = el.clientWidth;
-  if (!max) return;
+  if (!max) {
+    flushHomeDiary(el);
+    return;
+  }
   const gastro = el.querySelector(".home__diary-word--gastro");
-  gastro.style.letterSpacing = "-0.045em";
+  const track = nhgOn() ? "-0.04em" : "-0.045em";
+  gastro.style.letterSpacing = track;
   gastro.style.fontSize = "100px";
   const width = gastro.scrollWidth;
-  if (!width) return;
-  const size = (100 * max) / width;
+  if (!width) {
+    flushHomeDiary(el);
+    return;
+  }
+  const size = nhgDisplaySize((100 * max) / width);
   const half = max / 2;
   words.forEach((word) => {
     word.style.fontSize = `${size}px`;
-    word.style.letterSpacing = "-0.045em";
+    word.style.letterSpacing = track;
   });
   const trackTo = (word, target) => {
     const natural = word.scrollWidth;
@@ -3832,70 +4697,30 @@ function fitHomeDiary() {
     word.style.letterSpacing = `${lo}em`;
   };
   trackTo(el.querySelector(".home__diary-word--visual"), half);
+  flushHomeDiary(el);
 }
 
 function bindHomeMenu() {
   const menu = document.querySelector(".home__menu");
   const btn = menu?.querySelector("button");
-  const list = document.querySelector("#home-menu-list");
-  if (!menu || !btn || !list) return;
-  let disarm = () => {};
-  let closeTimer = 0;
-  const finishClose = () => {
-    clearTimeout(closeTimer);
-    disarm();
-    disarm = () => {};
-    menu.classList.remove("is-open", "is-closing");
-    btn.setAttribute("aria-expanded", "false");
-    list.hidden = true;
-  };
-  const close = () => {
-    if (list.hidden || menu.classList.contains("is-closing")) return;
-    if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      finishClose();
-      return;
-    }
-    menu.classList.remove("is-open");
-    menu.classList.add("is-closing");
-    btn.setAttribute("aria-expanded", "false");
-    const first = list.querySelector("a");
-    const done = (e) => {
-      if (e.target !== first || !menu.classList.contains("is-closing")) return;
-      finishClose();
-    };
-    first.addEventListener("animationend", done);
-    disarm = () => first.removeEventListener("animationend", done);
-    closeTimer = setTimeout(() => {
-      if (menu.classList.contains("is-closing")) finishClose();
-    }, 700);
-  };
-  const open = () => {
-    clearTimeout(closeTimer);
-    disarm();
-    disarm = () => {};
-    menu.classList.remove("is-closing");
-    list.hidden = false;
-    menu.classList.remove("is-open");
-    void list.offsetWidth;
-    menu.classList.add("is-open");
-    btn.setAttribute("aria-expanded", "true");
-  };
-  btn.addEventListener("click", () => {
-    if (menu.classList.contains("is-open")) close();
-    else open();
-  });
-  list.querySelectorAll("[data-goto]").forEach((link) => {
-    link.addEventListener("click", close);
-  });
-  document.addEventListener("click", (e) => {
-    if (menu.contains(e.target)) return;
-    close();
+  const tree = $("#site-tree");
+  if (!menu || !btn || !tree) return;
+  btn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const open = !tree.hidden;
+    tree.hidden = open;
+    btn.setAttribute("aria-expanded", open ? "false" : "true");
+    if (!open) paintSiteTree();
   });
   fitHomeDiary();
   window.addEventListener("resize", () => {
-    fitHomeDiary();
+    scheduleHomeDiaryFit();
     document.querySelectorAll(".home__flash").forEach(placeHomeFace);
   });
+  window.visualViewport?.addEventListener("resize", scheduleHomeDiaryFit);
+  document.fonts?.addEventListener("loadingdone", scheduleHomeDiaryFit);
+  window.setTimeout(scheduleHomeDiaryFit, 400);
+  window.setTimeout(scheduleHomeDiaryFit, 1200);
 }
 
 function bindPagePeel() {
@@ -4155,6 +4980,8 @@ function releaseScreen(key) {
 }
 
 function init() {
+  dropLegacyTreePos();
+  syncTreePlaceChrome();
   buildCookzList($("#venue-list"));
   bindPassed();
 
@@ -4177,10 +5004,16 @@ function init() {
   if (readLangCookie()) applySiteLang(siteLang, { rebuild: false });
   else applySiteLang("es", { rebuild: false, save: false });
   $("#site-tree")?.addEventListener("click", (e) => {
+    if (siteTreePlaceMode()) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
     const btn = e.target.closest("[data-tree]");
     if (!btn) return;
     if (btn.dataset.tree === "konbini" && btn.dataset.extra === "favos") window.playFavosTrain?.();
     $("#site-tree").hidden = true;
+    syncHomeTreeButton();
     go(btn.dataset.tree, btn.dataset.extra || "");
   });
   syncTicketSortUi();
@@ -4195,6 +5028,7 @@ function init() {
   addEventListener("resize", () => {
     sortLinePrev = null;
     positionTicketSortLine(false);
+    positionSiteTree();
   });
 
   setupJapanCarousel();
@@ -4205,6 +5039,7 @@ function init() {
   bindFavosFilm();
   bindTicketRain();
   bindHomeMenu();
+  bindSiteTreePlace();
   const snackActions = document.querySelector(".k-actions");
   const syncSnackActions = () => {
     if (!snackActions) return;
@@ -4231,10 +5066,20 @@ function init() {
       e.preventDefault();
       const open = tree && !tree.hidden;
       if (tree) tree.hidden = open;
+      syncHomeTreeButton();
       if (!open) paintSiteTree();
       return;
     }
-    if (tree && !tree.hidden && !tree.contains(e.target)) tree.hidden = true;
+    if (
+      tree &&
+      !tree.hidden &&
+      !siteTreePlaceMode() &&
+      !tree.contains(e.target) &&
+      !e.target.closest(".home__menu")
+    ) {
+      tree.hidden = true;
+      syncHomeTreeButton();
+    }
     const hit = e.target.closest("[data-goto]");
     if (!hit) return;
     if (hit.closest(".j-card") && japanDragDistance > 10) return;
