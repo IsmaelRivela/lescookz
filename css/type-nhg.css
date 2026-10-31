@@ -8,6 +8,7 @@ html[data-type="nhg"] {
   --nhg-text: "neue-haas-grotesk-text", "Helvetica Neue", Helvetica, Arial, sans-serif;
   --nhg-body: #6a6a6a;
   --nhg-title: #111;
+  --nhg-carbon: #252525;
 }
 
 html[data-type="nhg"] body {
@@ -69,8 +70,6 @@ html[data-type="nhg"] .manifest__tools span {
 }
 
 /* H4 — presenta el estudio o el local. 17px, -1%, 120%. Negro. */
-html[data-type="nhg"] .manifest__copy b,
-html[data-type="nhg"] .manifest__copy strong,
 html[data-type="nhg"] .frame[data-screen="cookz"] .detail__ja,
 html[data-type="nhg"] .detail__ja,
 html[data-type="nhg"] .passed-form__lead,
@@ -180,8 +179,23 @@ html[data-type="nhg"] .passed-side__title {
   color: var(--red);
 }
 
+html[data-type="nhg"] .manifest__copy .manifest__kicker,
+html[data-type="nhg"] .manifest__copy > b:first-child,
+html[data-type="nhg"] .manifest__copy > strong:first-child {
+  font-family: var(--nhg-display);
+  font-size: clamp(16px, 1.08vw, 19px);
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  color: var(--nhg-carbon);
+  text-transform: uppercase;
+  -webkit-font-smoothing: auto;
+}
+
 html[data-type="nhg"] .manifest__copy b,
 html[data-type="nhg"] .manifest__copy strong {
+  font-family: var(--nhg-text);
+  font-weight: 700;
   color: var(--nhg-title);
   text-transform: uppercase;
 }
@@ -242,5 +256,16 @@ html[data-type="nhg"] .manifest__copy strong {
   html[data-type="nhg"] .frame[data-screen="cookz"] .detail__ja,
   html[data-type="nhg"] .passed-note__name {
     font-size: var(--m-title-lead);
+  }
+
+  html[data-type="nhg"] .manifest__copy .manifest__kicker,
+  html[data-type="nhg"] .manifest__copy > b:first-child,
+  html[data-type="nhg"] .manifest__copy > strong:first-child {
+    font-family: var(--nhg-display);
+    font-size: var(--m-title-lead);
+    font-weight: 700;
+    line-height: 1.12;
+    letter-spacing: -0.02em;
+    color: var(--nhg-carbon);
   }
 }

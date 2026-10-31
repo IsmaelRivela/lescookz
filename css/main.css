@@ -759,6 +759,18 @@ body:has(.frame[data-screen="home"].is-on) .home__diary {
 }
 .manifest__copy p { margin: 0 0 0.85em; }
 .manifest__copy p:last-child { margin-bottom: 0; }
+.manifest__kicker,
+.manifest__copy > b:first-child,
+.manifest__copy > strong:first-child {
+  display: block;
+  width: 100%;
+  margin: 0 0 0.85em;
+  font-weight: 700;
+  text-transform: uppercase;
+  text-align: center;
+  text-align-last: center;
+  color: #252525;
+}
 .manifest__copy b,
 .manifest__copy strong { font-weight: 700; text-transform: uppercase; }
 .manifest__copy em,

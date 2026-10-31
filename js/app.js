@@ -934,6 +934,7 @@ function homeDiaryFitWidth(el) {
 
 const NHG_FONT_SPECS = [
   '700 16px "neue-haas-grotesk-display"',
+  '700 32px "neue-haas-grotesk-display"',
   '700 16px "neue-haas-grotesk-text"',
   '400 13px "neue-haas-grotesk-text"',
 ];
