@@ -385,9 +385,27 @@ function setTicketSort(key) {
   layoutTickets({ reorder: true });
 }
 
+function siteBase() {
+  const path = location.pathname;
+  return path === "/lescookz" || path.startsWith("/lescookz/") ? "/lescookz" : "";
+}
+
+function screenPath(screen, extra) {
+  const base = siteBase();
+  if (!screen || screen === "home") return `${base}/`;
+  return `${base}/${extra ? `${screen}/${extra}` : screen}`;
+}
+
 function route() {
-  const [screen, sub] = (location.hash.replace(/^#\/?/, "") || "home").split("/");
-  return { screen, sub };
+  let path = location.pathname;
+  const base = siteBase();
+  if (base && (path === base || path.startsWith(`${base}/`))) path = path.slice(base.length);
+  path = path.replace(/^\/+|\/+$/g, "");
+  const hash = location.hash.replace(/^#\/?/, "").replace(/^\/+|\/+$/g, "");
+  if (hash && hash !== "home") path = hash;
+  if (path === "home") path = "";
+  const [screen, sub] = (path || "home").split("/");
+  return { screen: screen || "home", sub: sub || "" };
 }
 
 function paintSiteTree() {
@@ -399,10 +417,16 @@ function paintSiteTree() {
   });
 }
 
-function go(screen, extra) {
-  const path = extra ? `${screen}/${extra}` : screen;
-  if (location.hash !== `#/${path}`) location.hash = `/${path}`;
-  else apply();
+function go(screen, extra, replace) {
+  const path = screenPath(screen, extra);
+  const here = `${location.pathname}${location.search}`;
+  const same = here === path && !location.hash;
+  if (!same) {
+    if (replace) history.replaceState(null, "", path);
+    else history.pushState(null, "", path);
+  }
+  window.dispatchEvent(new Event("cookz-nav"));
+  apply();
 }
 
 function renderCookzOrder(el, text) {
@@ -2485,7 +2509,7 @@ function bindPassed() {
 function apply() {
   const { screen, sub } = route();
   if (screen === "lienzo" || screen === "descartes") {
-    location.replace("#/cookz");
+    go("cookz", "", true);
     return;
   }
   const known = ["home", "japan2026", "manifest", "cookz", "passed-along", "konbini"];
@@ -2493,7 +2517,8 @@ function apply() {
   if (current === "konbini") {
     if (sub === "tickets") {
       konbiniView = "tickets-all";
-      if (location.hash !== "#/konbini/tickets-all") location.replace("#/konbini/tickets-all");
+      go("konbini", "tickets-all", true);
+      return;
     } else {
       konbiniView = ["tickets-all", "tracker", "favos", "stats"].includes(sub) ? sub : "hub";
     }
@@ -2580,7 +2605,7 @@ function createTicketCard(ticket) {
   const media = document.createElement("div");
   media.className = "t-card__media";
   const img = document.createElement("img");
-  if (phoneMedia() && !location.hash.includes("tickets-all")) img.dataset.defer = ticket.src;
+  if (phoneMedia() && !`${location.pathname}${location.hash}`.includes("tickets-all")) img.dataset.defer = ticket.src;
   else useSrc(img, ticket.src);
   img.alt = ticket.ktId || "Ticket";
   img.loading = "lazy";
@@ -3427,7 +3452,7 @@ function bindFavosFilm() {
     video.play().catch(parkOnLast);
   };
 
-  document.querySelectorAll('a[href="#/konbini/favos"]').forEach((link) => {
+  document.querySelectorAll('a[href="/konbini/favos"]').forEach((link) => {
     link.addEventListener("click", begin);
   });
   window.playFavosTrain = begin;
@@ -3992,7 +4017,7 @@ function releaseScreen(key) {
 
 function scheduleLoads() {
   if (phoneMedia()) return;
-  const now = (location.hash || "").replace(/^#\/?/, "").split("/")[0] || "home";
+  const now = route().screen || "home";
   const first = now === "cookz" ? "lienzo" : now;
   const all = ["japan2026", "lienzo", "manifest", "passed-along", "konbini"];
   const queue = [];
@@ -4113,7 +4138,7 @@ function init() {
     });
   });
 
-  addEventListener("hashchange", apply);
+  addEventListener("popstate", apply);
   document.querySelectorAll(".j-card img").forEach((img) => {
     if (!img.complete) img.addEventListener("load", layoutJapan);
   });
@@ -4140,8 +4165,11 @@ function init() {
     document.querySelectorAll(".t-card.is-open").forEach((el) => el.classList.remove("is-open"));
   });
 
-  if (!location.hash) location.hash = "/home";
-  apply();
+  window.cookzGo = go;
+  const landed = route();
+  const clean = screenPath(landed.screen, landed.sub);
+  if (`${location.pathname}${location.search}` !== clean || location.hash) go(landed.screen, landed.sub, true);
+  else apply();
   scheduleLoads();
 }
 

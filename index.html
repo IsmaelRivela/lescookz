@@ -2,6 +2,7 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
+    <base href="/" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <script>
       document.documentElement.dataset.lang = /(?:^|; )cookz-lang=(es|en)(?:;|$)/.test(document.cookie) ? "set" : "";
@@ -46,12 +47,12 @@
     <div id="stage">
     <section class="frame" data-screen="home">
       <div class="home__rush" aria-hidden="true"></div>
-      <a href="#/home" data-goto="home"><img class="logo" src="media/ui/logo-mark.svg" alt="cookz" /></a>
+      <a href="/" data-goto="home"><img class="logo" src="media/ui/logo-mark.svg" alt="cookz" /></a>
       <div class="home__menu">
         <button type="button" aria-expanded="false" aria-controls="home-menu-list" data-i18n="menu">menú</button>
         <nav id="home-menu-list" hidden>
-          <a href="#/japan2026" data-goto="japan2026">japan 2026</a>
-          <a href="#/manifest" data-goto="manifest">manifest</a>
+          <a href="/japan2026" data-goto="japan2026">japan 2026</a>
+          <a href="/manifest" data-goto="manifest">manifest</a>
         </nav>
       </div>
       <div class="home__center">
@@ -74,7 +75,7 @@
     </section>
 
     <section class="frame" data-screen="lienzo">
-      <a href="#/home" data-goto="home"><img class="logo" src="media/ui/logo-mark.svg" alt="cookz" /></a>
+      <a href="/" data-goto="home"><img class="logo" src="media/ui/logo-mark.svg" alt="cookz" /></a>
       <div class="lienzo" id="lienzo">
         <div class="lienzo__world" id="lienzo-world"></div>
       </div>
@@ -82,7 +83,7 @@
     </section>
 
     <section class="frame" data-screen="japan2026">
-      <a href="#/home" data-goto="home"><img class="logo" src="media/ui/logo-mark.svg" alt="cookz" /></a>
+      <a href="/" data-goto="home"><img class="logo" src="media/ui/logo-mark.svg" alt="cookz" /></a>
       <img class="logo logo--mix" src="media/ui/logo-mark.svg" alt="" aria-hidden="true" />
       <h1 class="section-title">Japan2026</h1>
       <label class="j-blend" hidden>
@@ -108,13 +109,13 @@
       </label>
       <div class="j-window" id="j-window">
         <div class="j-track">
-          <a class="j-card j-card--cookz" href="#/cookz" data-goto="cookz">
+          <a class="j-card j-card--cookz" href="/cookz" data-goto="cookz">
             <span class="j-card__stage">
               <img data-src="media/ui/cookz.webp" alt="" />
               <span class="j-card__label">Cookz</span>
             </span>
           </a>
-          <a class="j-card j-card--konbini" href="#/konbini" data-goto="konbini">
+          <a class="j-card j-card--konbini" href="/konbini" data-goto="konbini">
             <span class="j-card__stage">
               <span class="j-card__film">
                 <iframe
@@ -129,7 +130,7 @@
               <span class="j-card__label"><span>K</span><span>o</span><span>n</span><span>b</span><span>i</span><span>n</span><span>i</span></span>
             </span>
           </a>
-          <a class="j-card j-card--passed" href="#/passed-along" data-goto="passed-along">
+          <a class="j-card j-card--passed" href="/passed-along" data-goto="passed-along">
             <span class="j-card__stage">
               <span class="j-card__stack">
                 <img class="j-card__echo j-card__echo--up" data-src="media/ui/passed-along.svg" alt="" aria-hidden="true" />
@@ -148,7 +149,7 @@
     </section>
 
     <section class="frame" data-screen="manifest">
-      <a href="#/home" data-goto="home"><img class="logo" src="media/ui/logo-mark.svg" alt="cookz" /></a>
+      <a href="/" data-goto="home"><img class="logo" src="media/ui/logo-mark.svg" alt="cookz" /></a>
       <h1 class="section-title">Manifest</h1>
       <div class="manifest__grid">
         <div class="manifest__edit">
@@ -164,7 +165,7 @@
     </section>
 
     <section class="frame frame--cookz" data-screen="cookz">
-      <a href="#/home" data-goto="home"><img class="logo" src="media/ui/logo-mark.svg" alt="cookz" /></a>
+      <a href="/" data-goto="home"><img class="logo" src="media/ui/logo-mark.svg" alt="cookz" /></a>
       <div class="cookz-shell">
         <div class="cookz-stage" id="cookz-stage">
           <div class="cookz-grid" id="cookz-grid" data-layout="4">
@@ -200,7 +201,7 @@
     </section>
 
     <section class="frame" data-screen="passed-along">
-      <a href="#/home" data-goto="home"><img class="logo" src="media/ui/logo-mark.svg" alt="cookz" /></a>
+      <a href="/" data-goto="home"><img class="logo" src="media/ui/logo-mark.svg" alt="cookz" /></a>
       <h1 class="section-title">Passed along</h1>
       <div class="passed" id="passed">
         <div class="passed__world" id="passed-world"></div>
@@ -227,7 +228,7 @@
     </section>
 
     <section class="frame" data-screen="konbini">
-      <a href="#/home" data-goto="home"><img class="logo" src="media/ui/logo-mark.svg" alt="cookz" /></a>
+      <a href="/" data-goto="home"><img class="logo" src="media/ui/logo-mark.svg" alt="cookz" /></a>
       <h1 class="section-title">Konbini</h1>
 
       <video
@@ -245,9 +246,9 @@
         <div class="k-rain" aria-hidden="true"></div>
         <canvas class="k-fall" id="k-fall" aria-hidden="true"></canvas>
         <nav class="k-menu" aria-label="Konbini">
-          <a href="#/konbini/tickets-all" data-goto="konbini" data-extra="tickets-all">tickets</a>
-          <a href="#/konbini/tracker" data-goto="konbini" data-extra="tracker">tracker</a>
-          <a href="#/konbini/favos" data-goto="konbini" data-extra="favos">favos</a>
+          <a href="/konbini/tickets-all" data-goto="konbini" data-extra="tickets-all">tickets</a>
+          <a href="/konbini/tracker" data-goto="konbini" data-extra="tracker">tracker</a>
+          <a href="/konbini/favos" data-goto="konbini" data-extra="favos">favos</a>
         </nav>
       </div>
 
@@ -271,7 +272,7 @@
           <img data-src="media/ui/osaka-bg.jpg" alt="" />
         </div>
         <canvas class="cs-inspect" id="cs-inspect" data-i18n="inspectAria" data-i18n-attr="aria-label" aria-label="Inspección del Famichiki"></canvas>
-        <a class="k-stats" href="#/konbini/stats" data-goto="konbini" data-extra="stats"><span class="k-stats__see" data-i18n="see">see</span><span class="k-stats__word">stats</span></a>
+        <a class="k-stats" href="/konbini/stats" data-goto="konbini" data-extra="stats"><span class="k-stats__see" data-i18n="see">see</span><span class="k-stats__word">stats</span></a>
         <div class="k-keys">
           <p><span data-i18n="keyChange">change</span><kbd>Q</kbd></p>
           <p><span data-i18n="keyInspect">inspect</span><kbd>F</kbd></p>

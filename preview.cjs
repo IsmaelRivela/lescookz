@@ -36,6 +36,14 @@ const expand = async (target) => {
   return current;
 };
 
+const historyFallback = (req, res, next) => {
+  if (req.method !== "GET" && req.method !== "HEAD") return next();
+  const url = new URL(req.url, "http://127.0.0.1");
+  if (url.pathname === "/map-link" || url.pathname.includes(".")) return next();
+  req.url = "/index.html";
+  next();
+};
+
 const mapLinkRoute = (req, res, next) => {
   const url = new URL(req.url, "http://127.0.0.1");
   if (url.pathname !== "/map-link") return next();
@@ -51,7 +59,7 @@ const mapLinkRoute = (req, res, next) => {
 module.exports = {
   server: {
     baseDir: ".",
-    middleware: [mapLinkRoute],
+    middleware: [historyFallback, mapLinkRoute],
   },
   files: ["index.html", "css/**/*.css", "js/**/*.js", "media/**/*"],
   port: 5178,

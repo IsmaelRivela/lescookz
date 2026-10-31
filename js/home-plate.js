@@ -236,7 +236,8 @@ if (canvas && panel) {
   function goJapan() {
     clearTimeout(goTimer);
     goTimer = 0;
-    location.hash = "/japan2026";
+    if (window.cookzGo) window.cookzGo("japan2026");
+    else history.pushState(null, "", "/japan2026");
   }
 
   canvas.addEventListener("pointermove", (event) => {
@@ -275,8 +276,9 @@ if (canvas && panel) {
     clearTimeout(goTimer);
     goTimer = 0;
   });
-  window.addEventListener("hashchange", () => {
-    if (location.hash === "#/home" || location.hash === "" || location.hash === "#") return;
+  window.addEventListener("cookz-nav", () => {
+    const path = location.pathname.replace(/\/$/, "") || "/";
+    if (path === "/" || path === "/lescookz") return;
     clearTimeout(goTimer);
     goTimer = 0;
     if (spinTarget === 0) return;

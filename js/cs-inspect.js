@@ -909,7 +909,7 @@ if (!canvas || !view) {
     applyPose(0);
     resize();
     view.classList.add("is-live");
-    const on = location.hash.includes("/konbini/tracker");
+    const on = `${location.pathname}${location.hash}`.includes("/konbini/tracker");
     setActive(on);
     if (!on) renderer.render(scene, camera);
   }
