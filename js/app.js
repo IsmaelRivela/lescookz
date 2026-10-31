@@ -516,6 +516,20 @@ function setTreeTopForInicio(targetInicioTop) {
   tree.style.top = `${Math.round(treeTop + (targetInicioTop - inicioTop))}px`;
 }
 
+function positionHomeMobileTree() {
+  const tree = $("#site-tree");
+  if (!tree || tree.hidden) return;
+  if (!document.querySelector('.frame[data-screen="home"].is-on')) {
+    tree.style.removeProperty("bottom");
+    return;
+  }
+  if (!window.matchMedia("(max-width: 820px)").matches) {
+    tree.style.removeProperty("bottom");
+    return;
+  }
+  tree.style.removeProperty("bottom");
+}
+
 function positionSiteTree() {
   const tree = $("#site-tree");
   if (!tree || tree.hidden) return;
@@ -523,8 +537,10 @@ function positionSiteTree() {
     tree.style.removeProperty("top");
     tree.style.removeProperty("left");
     tree.style.removeProperty("right");
+    positionHomeMobileTree();
     return;
   }
+  tree.style.removeProperty("bottom");
   const gap = treeAnchorGap();
   const homeOn = document.querySelector('.frame[data-screen="home"].is-on');
   if (homeOn) {
@@ -4462,11 +4478,12 @@ function flushHomeDiary(el) {
       const inkBase = inkRects.length
         ? Math.max(...inkRects.map((r) => r.bottom))
         : target.getBoundingClientRect().bottom;
-      const overlap = mobile ? 7 : 11;
+      const overlap = mobile ? 7 : 20;
       const bandH = Math.max(0, floor - inkBase + overlap);
       band.style.height = `${Math.round(bandH)}px`;
       band.hidden = bandH < 2;
     }
+    positionHomeMobileTree();
   };
 
   pin();
@@ -4517,6 +4534,10 @@ function fitHomeDiary() {
   }
   const gastro = el.querySelector(".home__diary-word--gastro");
   const track = nhgOn() ? "-0.04em" : "-0.045em";
+  const style = getComputedStyle(el);
+  const padX =
+    (parseFloat(style.paddingLeft) || 0) + (parseFloat(style.paddingRight) || 0);
+  const fitW = Math.max(0, el.clientWidth - padX);
   gastro.style.letterSpacing = track;
   gastro.style.fontSize = "100px";
   const width = gastro.getBoundingClientRect().width;
@@ -4524,12 +4545,24 @@ function fitHomeDiary() {
     flushHomeDiary(el);
     return;
   }
-  const size = nhgDisplaySize((100 * max) / width);
-  const half = max / 2;
+  let size = nhgDisplaySize((100 * fitW) / width);
+  const half = fitW / 2;
   words.forEach((word) => {
     word.style.fontSize = `${size}px`;
     word.style.letterSpacing = track;
   });
+  const shrinkGastro = () => {
+    const limit = fitW - 1;
+    let guard = 0;
+    while (gastro.getBoundingClientRect().width > limit && size > 8 && guard < 24) {
+      size *= 0.985;
+      words.forEach((word) => {
+        word.style.fontSize = `${size}px`;
+      });
+      guard += 1;
+    }
+  };
+  shrinkGastro();
   const trackTo = (word, target) => {
     const natural = word.scrollWidth;
     if (!natural || natural >= target - 1) return;

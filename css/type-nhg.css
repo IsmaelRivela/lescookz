@@ -232,6 +232,13 @@ html[data-type="nhg"] .manifest__copy strong {
     letter-spacing: -0.02em;
   }
 
+  html[data-type="nhg"] body:has(.frame[data-screen="home"].is-on) .site-tree button:not([data-tree="home"]) {
+    font-family: var(--nhg-display);
+    font-size: clamp(26px, 7.4vw, 36px);
+    line-height: 1.06;
+    letter-spacing: -0.025em;
+  }
+
   html[data-type="nhg"] .frame[data-screen="cookz"] .detail__ja,
   html[data-type="nhg"] .passed-note__name {
     font-size: var(--m-title-lead);

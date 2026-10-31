@@ -90,6 +90,10 @@
     white-space: normal;
     text-align: left;
     line-height: 0.72;
+    box-sizing: border-box;
+    padding-left: max(4vw, env(safe-area-inset-left, 0px));
+    padding-right: max(4vw, env(safe-area-inset-right, 0px));
+    overflow: visible;
   }
   .home__diary .home__diary-word {
     display: block;
@@ -98,6 +102,9 @@
     white-space: nowrap;
     letter-spacing: -0.045em;
     line-height: 0.72;
+  }
+  .home__diary .home__diary-word--gastro {
+    max-width: 100%;
   }
   .home__diary .home__diary-word + .home__diary-word {
     margin-top: -0.078em;
@@ -1119,6 +1126,7 @@ body:has(.frame[data-screen="home"].is-on) .site-tree:not([hidden]) {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
+  --tree-step: clamp(12px, 1.55vw, 22px);
 }
 body:has(.frame[data-screen="home"].is-on) .site-tree__nest {
   margin-left: 0;
@@ -1145,22 +1153,49 @@ body:has(.frame[data-screen="home"].is-on) .site-tree button {
   .site-tree,
   .site-tree:not([hidden]) { display: none; }
   body:has(.frame[data-screen="home"].is-on) .site-tree:not([hidden]) {
+    position: fixed;
     display: flex;
     flex-direction: column;
+    justify-content: flex-start;
+    gap: clamp(0.08rem, 0.45vh, 0.22rem);
     align-items: flex-end;
     left: auto;
     right: 4vw;
-    top: calc(4.8vh + 1.45rem);
+    top: calc(4.8vh + 2.85rem);
     width: max-content;
-    max-width: min(92vw, 320px);
+    max-width: min(92vw, 340px);
+    min-height: 0;
+    z-index: 62;
+    --site-logo-w: min(42vw, 148px);
+    --tree-indent: clamp(18px, 5.6vw, 30px);
   }
+  body:has(.frame[data-screen="home"].is-on) .site-tree [data-tree="home"] {
+    display: none;
+  }
+  /* Aplana nidos: mismo reparto vertical entre todos los enlaces */
   body:has(.frame[data-screen="home"].is-on) .site-tree__nest {
-    margin-left: 0;
-    margin-right: var(--tree-step);
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    align-self: flex-end;
-    width: auto;
+    display: contents;
+  }
+  body:has(.frame[data-screen="home"].is-on) .site-tree button:not([data-tree="home"]) {
+    font-size: clamp(26px, 7.4vw, 36px);
+    font-weight: 700;
+    line-height: 1.06;
+    letter-spacing: -0.025em;
+    margin: 0.16rem 0;
+    padding: 0.1rem 0.35rem;
+    text-align: right;
+    margin-left: auto;
+    margin-right: 0;
+  }
+  /* Sangrado horizontal por nivel (árbol alineado a la derecha) */
+  body:has(.frame[data-screen="home"].is-on) .site-tree button[data-tree="cookz"],
+  body:has(.frame[data-screen="home"].is-on) .site-tree button[data-tree="passed-along"],
+  body:has(.frame[data-screen="home"].is-on)
+    .site-tree
+    button[data-tree="konbini"]:not([data-extra]) {
+    margin-right: var(--tree-indent);
+  }
+  body:has(.frame[data-screen="home"].is-on) .site-tree button[data-extra] {
+    margin-right: calc(var(--tree-indent) * 2);
   }
 }
