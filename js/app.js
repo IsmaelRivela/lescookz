@@ -2714,8 +2714,26 @@ function layoutTickets({ reorder = false, force = false } = {}) {
     const card = createTicketCard(ticket);
     card.style.order = String(index);
     track.append(card);
-    const shot = card.querySelector("img");
-    if (shot) ticketImageObserver().observe(shot);
+  });
+  primeTicketImages(track);
+}
+
+function primeTicketImages(track) {
+  const phone = phoneMedia();
+  [...track.querySelectorAll(".t-card img")].forEach((img, index) => {
+    const pending = img.dataset.defer;
+    if (!pending) return;
+    if (!phone) {
+      ticketImageObserver().observe(img);
+      return;
+    }
+    delete img.dataset.defer;
+    img.fetchPriority = index < 12 ? "high" : "low";
+    const reveal = () => img.classList.add("is-in");
+    img.addEventListener("load", reveal, { once: true });
+    useSrc(img, pending, true);
+    trackMedia("tickets", img);
+    if (img.complete && img.naturalWidth) reveal();
   });
 }
 
@@ -2821,6 +2839,14 @@ function cleanManifest(html) {
   return doc.body.innerHTML.trim();
 }
 
+function japanVertical() {
+  return window.matchMedia("(max-width: 820px)").matches;
+}
+
+function japanPoint(e) {
+  return japanVertical() ? e.clientY : e.clientX;
+}
+
 let japanSetWidth = 0;
 let japanLoopStart = 0;
 let japanPosition = 0;
@@ -2838,8 +2864,21 @@ function cloneJapanCard(card) {
   const clone = card.cloneNode(true);
   clone.setAttribute("aria-hidden", "true");
   clone.tabIndex = -1;
-  clone.querySelectorAll("iframe").forEach((frame) => frame.remove());
+  clone.querySelectorAll("iframe, video").forEach((frame) => frame.remove());
   return clone;
+}
+
+function nudgeKonbiniPlayer(player) {
+  if (!player || player.tagName !== "VIDEO") return;
+  player.muted = true;
+  player.playsInline = true;
+  const go = () => player.play?.().catch(() => {});
+  if (player.readyState >= 2) go();
+  else player.addEventListener("canplay", go, { once: true });
+}
+
+function kickKonbiniPlayer(player) {
+  nudgeKonbiniPlayer(player);
 }
 
 function parkKonbiniPlayer() {
@@ -2848,13 +2887,16 @@ function parkKonbiniPlayer() {
   const rail = document.getElementById("j-window");
   const player = rail?.querySelector(".j-card__film-player");
   if (!rail || !player) return;
-  const mid = rail.getBoundingClientRect().left + rail.clientWidth / 2;
+  const box = rail.getBoundingClientRect();
+  const vertical = japanVertical();
+  const mid = vertical ? box.top + rail.clientHeight / 2 : box.left + rail.clientWidth / 2;
   let best = null;
   let bestDist = Infinity;
   rail.querySelectorAll(".j-card--konbini .j-card__film").forEach((film) => {
     const rect = film.getBoundingClientRect();
     if (rect.width < 2) return;
-    const dist = Math.abs(rect.left + rect.width / 2 - mid);
+    const center = vertical ? rect.top + rect.height / 2 : rect.left + rect.width / 2;
+    const dist = Math.abs(center - mid);
     if (dist < bestDist) {
       bestDist = dist;
       best = film;
@@ -2864,6 +2906,7 @@ function parkKonbiniPlayer() {
   if (player.parentElement !== best) best.appendChild(player);
   const pending = player.getAttribute("data-src");
   if (pending && !player.getAttribute("src")) player.src = pending;
+  if (player.getAttribute("src")) kickKonbiniPlayer(player);
 }
 
 function measureJapanLoop() {
@@ -2871,8 +2914,9 @@ function measureJapanLoop() {
   if (!track) return false;
   const cards = [...track.querySelectorAll(".j-card")];
   if (cards.length < 9) return false;
-  const start = cards[3].offsetLeft;
-  const width = cards[6].offsetLeft - cards[3].offsetLeft;
+  const vertical = japanVertical();
+  const start = vertical ? cards[3].offsetTop : cards[3].offsetLeft;
+  const width = (vertical ? cards[6].offsetTop : cards[6].offsetLeft) - start;
   if (!width) return false;
   japanLoopStart = start;
   japanSetWidth = width;
@@ -2886,10 +2930,40 @@ function applyJapanTransform() {
   const start = japanLoopStart;
   let local = japanPosition - start;
   local = ((local % w) + w) % w;
-  track.style.transform = `translate3d(${-(start + local)}px, 0, 0)`;
+  const shift = -(start + local);
+  track.style.transform = japanVertical()
+    ? `translate3d(0, ${shift}px, 0)`
+    : `translate3d(${shift}px, 0, 0)`;
   syncJapanLogo();
   syncJapanMark();
+  syncPassedSpread();
   parkKonbiniPlayer();
+}
+
+function syncPassedSpread() {
+  const rail = document.getElementById("j-window");
+  if (!rail) return;
+  const cards = [...rail.querySelectorAll(".j-card--passed")];
+  if (!japanVertical()) {
+    cards.forEach((card) => card.classList.remove("is-spread"));
+    return;
+  }
+  const mid = rail.getBoundingClientRect().top + rail.clientHeight / 2;
+  const reach = rail.clientHeight * 0.22;
+  let best = null;
+  let bestDist = Infinity;
+  cards.forEach((card) => {
+    card.classList.remove("is-spread");
+    const stack = card.querySelector(".j-card__stack");
+    const rect = stack?.getBoundingClientRect();
+    if (!rect || rect.height < 2) return;
+    const dist = Math.abs(rect.top + rect.height / 2 - mid);
+    if (dist < bestDist) {
+      bestDist = dist;
+      best = card;
+    }
+  });
+  if (best && bestDist < reach) best.classList.add("is-spread");
 }
 
 let japanMarkPhase = 1;
@@ -2902,9 +2976,12 @@ function japanFocusPhase() {
   if (!rail || !cookz || !japanSetWidth) return japanMarkPhase;
   const w = japanSetWidth;
   const start = japanLoopStart;
+  const vertical = japanVertical();
   const local = ((japanPosition - start) % w + w) % w;
-  const center = start + local + rail.clientWidth / 2;
-  const cookzCenter = cookz.offsetLeft + cookz.offsetWidth / 2;
+  const center = start + local + (vertical ? rail.clientHeight : rail.clientWidth) / 2;
+  const cookzCenter = vertical
+    ? cookz.offsetTop + cookz.offsetHeight / 2
+    : cookz.offsetLeft + cookz.offsetWidth / 2;
   return (center - cookzCenter) / (w / 3);
 }
 
@@ -2918,7 +2995,8 @@ function syncJapanMark() {
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   japanMarkPhase = reduce ? dest : japanMarkPhase + (dest - japanMarkPhase) * 0.28;
   if (Math.abs(dest - japanMarkPhase) < 0.004) japanMarkPhase = dest;
-  const trackW = mark.clientWidth;
+  const vertical = japanVertical();
+  const trackW = vertical ? mark.clientHeight : mark.clientWidth;
   const dashW = trackW * 0.22;
   const travel = Math.max(0, trackW - dashW);
   const step = travel / 2;
@@ -2926,11 +3004,17 @@ function syncJapanMark() {
   const phase = ((japanMarkPhase % 3) + 3) % 3;
   const x = phase * step;
   const stretch = reduce ? 1 : 1 + Math.min(0.9, Math.abs(japanVelocity) / 16);
-  const origin = japanVelocity >= 0 ? "left center" : "right center";
+  const origin = vertical
+    ? (japanVelocity >= 0 ? "center top" : "center bottom")
+    : (japanVelocity >= 0 ? "left center" : "right center");
   mark.querySelectorAll(".j-mark__dash").forEach((dash, i) => {
     const shift = i === 0 ? 0 : -cycle;
     dash.style.transformOrigin = origin;
-    dash.style.transform = `translate3d(${(x + shift).toFixed(1)}px, 0, 0) scaleX(${stretch.toFixed(3)})`;
+    const pos = (x + shift).toFixed(1);
+    const scale = stretch.toFixed(3);
+    dash.style.transform = vertical
+      ? `translate3d(-50%, ${pos}px, 0) scaleY(${scale})`
+      : `translate3d(${pos}px, 0, 0) scaleX(${scale})`;
   });
   const drifting = Math.abs(dest - japanMarkPhase) > 0.004 || Math.abs(japanVelocity) > 0.06;
   if (drifting && !japanMarkRaf) {
@@ -3037,18 +3121,21 @@ function initJapanMotion() {
     (e) => {
       if (e.button !== 0) return;
       if (e.target.closest("a:not(.j-card), button, input, select, textarea, label")) return;
+      nudgeKonbiniPlayer(document.querySelector(".j-card__film-player"));
       const touch = e.pointerType === "touch" || window.matchMedia("(max-width: 820px)").matches;
       if (!touch && !e.target.closest("#j-window")) return;
       if (!touch && e.target.closest(".j-card")) return;
       japanPointerDown = true;
       japanPointerTouch = touch;
       japanDragDistance = 0;
-      japanPointerLastX = e.clientX;
+      japanPointerLastX = japanPoint(e);
       japanPointerVel = 0;
       japanVelocity = 0;
-      japanMoves = [{ x: e.clientX, t: performance.now() }];
+      japanMoves = [{ x: japanPoint(e), t: performance.now() }];
       rail.classList.add("is-dragging");
-      try { japan.setPointerCapture(e.pointerId); } catch { /* pointer already gone */ }
+      if (!touch) {
+        try { japan.setPointerCapture(e.pointerId); } catch { /* pointer already gone */ }
+      }
     },
     { passive: true },
   );
@@ -3057,12 +3144,14 @@ function initJapanMotion() {
     "pointermove",
     (e) => {
       if (!japanPointerDown) return;
-      const dx = japanPointerLastX - e.clientX;
-      japanPointerLastX = e.clientX;
+      const point = japanPoint(e);
+      const dx = japanPointerLastX - point;
+      japanPointerLastX = point;
       japanDragDistance += Math.abs(dx);
+      if (japanPointerTouch && japanDragDistance < 14) return;
       japanPointerVel = dx;
       japanPosition += dx * (japanPointerTouch ? 1.35 : 1);
-      japanMoves.push({ x: e.clientX, t: performance.now() });
+      japanMoves.push({ x: point, t: performance.now() });
       if (japanMoves.length > 6) japanMoves.shift();
       applyJapanTransform();
     },
@@ -3074,6 +3163,11 @@ function initJapanMotion() {
     japanPointerDown = false;
     rail.classList.remove("is-dragging");
     try { japan.releasePointerCapture(e.pointerId); } catch { /* already released */ }
+    if (japanPointerTouch && japanDragDistance < 14) {
+      japanDragDistance = 0;
+      japanVelocity = 0;
+      return;
+    }
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (reduce) japanVelocity = 0;
     else if (japanPointerTouch) {
@@ -3170,6 +3264,17 @@ function layoutJapan() {
   if (!rail || !track) return;
 
   track.style.transform = "none";
+  if (japanVertical()) {
+    track.querySelectorAll(".j-card--konbini").forEach((el) => {
+      el.style.transform = "";
+    });
+    if (!measureJapanLoop()) return;
+    const cards = [...track.querySelectorAll(".j-card")];
+    const focus = cards[4] || cards[3];
+    japanPosition = focus.offsetTop + focus.offsetHeight / 2 - rail.clientHeight / 2;
+    applyJapanTransform();
+    return;
+  }
   const visualMid = centerJapanKonbini();
   if (!measureJapanLoop()) return;
 

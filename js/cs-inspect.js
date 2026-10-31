@@ -92,7 +92,6 @@ if (!canvas || !view) {
   let gripOn = false;
   let gripOverrides = {};
   const lookTarget = new THREE.Vector3();
-  const camBack = new THREE.Vector3();
   const gripPanel = document.getElementById("k-grip");
 
   function cstr(bytes, start, len) {
@@ -448,12 +447,6 @@ if (!canvas || !view) {
       ? clip.frames[0].map((b) => ({ pos: b.pos.clone(), quat: b.quat.clone() }))
       : samplePose(time, clip, mode === "idle");
     blendPalm(pose);
-    if (window.matchMedia("(max-width: 820px)").matches) {
-      for (let i = 0; i < bones.length; i += 1) {
-        if (!/UpperArm|Forearm/.test(bones[i].name) || /Twist|Finger/.test(bones[i].name)) continue;
-        pose[i].pos.multiplyScalar(1.1);
-      }
-    }
     const worlds = worldMatrices(pose);
     for (const mesh of meshes) {
       if (mesh === knifeMesh) continue;
@@ -524,13 +517,6 @@ if (!canvas || !view) {
       snack.getWorldPosition(lookTarget);
     }
     camera.lookAt(lookTarget);
-    // Step back along the view. The hands keep their shape and sit in the
-    // tall frame without being pulled toward the middle.
-    if (window.matchMedia("(max-width: 820px)").matches) {
-      camera.getWorldDirection(camBack);
-      camera.position.addScaledVector(camBack, -4);
-      camera.lookAt(lookTarget);
-    }
   }
 
   function tick(now) {

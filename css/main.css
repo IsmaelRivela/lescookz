@@ -386,6 +386,8 @@ button { border: 0; background: none; padding: 0; cursor: pointer; text-align: l
   width: 100%;
   height: 100%;
   border: 0;
+  object-fit: cover;
+  background: #111;
   pointer-events: none;
 }
 .j-card:hover img,
@@ -1305,14 +1307,30 @@ button { border: 0; background: none; padding: 0; cursor: pointer; text-align: l
 .back--cookz {
   position: absolute;
   z-index: 5;
-  left: 1.4vw;
-  bottom: 2.5vh;
+  left: 1.6vw;
+  bottom: 2.4vh;
   right: auto;
   top: auto;
+  width: auto;
+  height: auto;
+  padding: 0.28rem 0.55rem;
+  border: 0;
+  background: #fff;
+  color: #111;
+  font: inherit;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  text-transform: uppercase;
+  cursor: pointer;
 }
-.back--cookz img {
-  width: clamp(48px, 4vw, 72px);
+.back--cookz:hover,
+.back--cookz:focus-visible {
+  background: var(--red);
+  color: #fff;
 }
+.back__word { display: block; }
 
 .preview {
   position: absolute;
@@ -2526,6 +2544,13 @@ button { border: 0; background: none; padding: 0; cursor: pointer; text-align: l
 .frame[data-screen="cookz"].is-case-zoom a:has(.logo) {
   pointer-events: auto;
   z-index: 30;
+}
+.frame[data-screen="cookz"].is-case-zoom .back--cookz {
+  display: block;
+  left: 1.6vw;
+  right: auto;
+  top: auto;
+  bottom: 2.4vh;
 }
 .frame[data-screen="cookz"].is-case-zoom.is-case-set {
   transition: none;

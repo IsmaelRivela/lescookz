@@ -21,12 +21,16 @@
   }
 
   .section-title {
-    top: 2.4vh;
+    top: 2.2vh;
     right: 4vw;
     left: auto;
+    height: calc(min(42vw, 148px) * 350 / 908);
     max-width: 50vw;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
     font-size: clamp(20px, 5.6vw, 34px);
-    line-height: 0.9;
+    line-height: 1;
     text-align: right;
   }
 
@@ -82,34 +86,102 @@
   .home__menu button,
   .home__menu a { font-size: 22px; }
 
-  /* japan 2026 — one card, same drag */
-  .frame[data-screen="japan2026"] .j-window { touch-action: none; }
-  .j-track {
-    gap: 6vw;
-    padding: 0 7vw;
+  /* japan 2026 — vertical infinite rail, title under each asset */
+  .frame[data-screen="japan2026"] .j-window {
+    align-items: flex-start;
+    justify-content: flex-start;
+    touch-action: none;
+  }
+  .frame[data-screen="japan2026"] .j-track {
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    height: max-content;
+    min-height: 0;
+    gap: calc(16vh + 1.6rem);
+    padding: 14vh 0 20vh;
+  }
+  .j-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
   .j-card__stage,
   .j-card--passed .j-card__stage,
   .j-card--cookz .j-card__stage,
   .j-card--konbini .j-card__stage {
-    width: 86vw;
-    height: 58vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    width: 78vw;
+    height: auto;
   }
   .j-card--konbini .j-card__stage {
     width: auto;
+  }
+  .frame[data-screen="japan2026"] .j-card img {
+    width: auto;
     height: auto;
+    max-width: 78vw;
+    max-height: 46vh;
   }
   .j-card--konbini .j-card__film {
-    height: min(56vh, calc(78vw * 16 / 9));
-    width: calc(min(56vh, 78vw * 16 / 9) * 9 / 16);
-    max-width: 78vw;
+    height: min(48vh, calc(70vw * 16 / 9));
+    width: calc(min(48vh, 70vw * 16 / 9) * 9 / 16);
+    max-width: 70vw;
   }
+  .j-card--konbini .j-card__film-player {
+    object-fit: cover;
+    background: #111;
+  }
+  .j-card--passed .j-card__stage { width: auto; }
+  .j-card--passed .j-card__stack,
+  .j-card--passed .j-card__stack img {
+    width: 26vw;
+    height: 15.6vh;
+    max-width: 26vw;
+    max-height: 15.6vh;
+  }
+  .j-card--passed .j-card__stack img { object-fit: contain; }
+  .frame[data-screen="japan2026"] .j-card--passed .j-card__echo--up,
+  .frame[data-screen="japan2026"] .j-card--passed .j-card__echo--down {
+    transform: translateY(0);
+    transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .frame[data-screen="japan2026"] .j-card--passed.is-spread .j-card__echo--up {
+    transform: translateY(-100%);
+  }
+  .frame[data-screen="japan2026"] .j-card--passed.is-spread .j-card__echo--down {
+    transform: translateY(calc(100% + 3.6rem));
+  }
+  .j-card:hover img,
+  .j-card:focus-visible img,
+  .j-card:focus-within img,
+  .j-card:active img { opacity: 1; }
+  .j-card__label,
   .j-card--konbini .j-card__label {
-    font-size: clamp(17px, 4.6vw, 30px);
-    padding: 0 0.7em;
-    box-sizing: border-box;
+    position: relative;
+    left: auto;
+    top: auto;
+    display: block;
+    width: auto;
+    max-width: 86vw;
+    margin: 0.6rem 0 0;
+    padding: 0;
+    color: var(--red);
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    line-height: 1.1;
+    text-align: center;
+    text-transform: lowercase;
+    white-space: nowrap;
     opacity: 1;
-    transform: translateY(-50%);
+    transform: none;
+    transition: none;
+    z-index: 3;
+    justify-content: center;
   }
 
   /* manifest — one column: photo, then the text */
@@ -230,15 +302,15 @@
     text-align: left;
     text-justify: auto;
   }
-  .back--cookz {
+  .frame[data-screen="cookz"].is-case-zoom .back--cookz {
     position: fixed;
-    left: auto;
-    right: 4vw;
-    top: 2.2vh;
-    bottom: auto;
-    z-index: 20;
+    left: 4vw;
+    right: auto;
+    top: auto;
+    bottom: calc(2.2vh + env(safe-area-inset-bottom));
+    z-index: 30;
+    font-size: 20px;
   }
-  .back--cookz img { width: 48px; }
 
   .passed__word { font-size: calc(18px - 2pt); }
   .frame[data-screen="passed-along"] {
@@ -355,19 +427,36 @@
     left: auto;
   }
 
-  /* tickets — the receipt scrolls between the header and the sort bar */
+  /* tickets — list starts under the logo, sort sits centered below */
   .frame[data-screen="konbini"] .view[data-kview="tickets-all"] .t-window {
     right: 0;
-    top: 22vh;
-    bottom: 8vh;
+    top: 0;
+    bottom: 0;
     touch-action: pan-y;
   }
+  .frame[data-screen="konbini"] .view[data-kview="tickets-all"].is-on::before {
+    height: calc(2.2vh + min(42vw, 148px) * 350 / 908 + 8vh);
+    z-index: 8;
+    background: linear-gradient(to bottom, #fff 0%, #fff 42%, rgba(255, 255, 255, 0.72) 68%, transparent 100%);
+  }
+  .frame[data-screen="konbini"] .view[data-kview="tickets-all"].is-on::after {
+    height: calc(3.2rem + 8vh + env(safe-area-inset-bottom));
+    z-index: 8;
+    background: linear-gradient(to top, #fff 0%, #fff 36%, rgba(255, 255, 255, 0.7) 64%, transparent 100%);
+  }
+  .t-card__media img:not(.is-in) { opacity: 0; }
+  .t-card__media img.is-in { opacity: 1; }
   .frame[data-screen="konbini"] .view[data-kview="tickets-all"] .t-lang {
     top: 16vh;
     left: 4vw;
     right: auto;
   }
-  .t-track { padding: 2vh 5vw 3vh; }
+  .t-track {
+    padding:
+      calc(2.2vh + min(42vw, 148px) * 350 / 908 + 1.4rem)
+      4vw
+      calc(5.6rem + env(safe-area-inset-bottom));
+  }
   .t-card:hover,
   .t-card:focus-within {
     transform: none;
@@ -382,23 +471,28 @@
   .t-window .t-card.is-open:focus-within {
     position: fixed;
     z-index: 40;
-    left: 7vw;
-    right: 7vw;
-    top: 6vh;
+    left: 4vw;
+    right: 4vw;
+    top: calc(2.2vh + min(42vw, 148px) * 350 / 908 + 0.45rem);
+    bottom: calc(0.5rem + env(safe-area-inset-bottom));
     width: auto;
-    max-height: 84vh;
+    max-height: none;
     margin: 0;
     overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
     background: #fff;
     transform: none;
   }
   .t-card.is-open .t-card__media {
     aspect-ratio: auto;
   }
-  .t-card.is-open .t-card__media img {
+  .t-card.is-open .t-card__media img,
+  .t-card.is-open .t-card__media img.is-in {
     opacity: 1;
+    width: 100%;
     height: auto;
-    max-height: 54vh;
+    max-height: none;
     object-fit: contain;
   }
   .t-card.is-open .t-card__info,
@@ -407,6 +501,26 @@
     inset: auto;
     opacity: 1;
     background: #fff;
+    overflow: visible;
+    align-items: stretch;
+  }
+  .t-card.is-open .t-card__panel,
+  .t-card.is-open .t-card__scroll {
+    width: 100%;
+    max-height: none;
+    overflow: visible;
+  }
+  .t-card.is-open .t-card__panel {
+    font-size: 15px;
+    padding-bottom: 1.2rem;
+  }
+  .frame[data-screen="konbini"] .view[data-kview="tickets-all"]:has(.t-card.is-open)::before,
+  .frame[data-screen="konbini"] .view[data-kview="tickets-all"]:has(.t-card.is-open)::after {
+    opacity: 0;
+  }
+  .frame[data-screen="konbini"] .view[data-kview="tickets-all"]:has(.t-card.is-open) .t-sort {
+    visibility: hidden;
+    pointer-events: none;
   }
   .t-window:has(.t-card.is-open)::before {
     content: "";
@@ -429,47 +543,60 @@
   }
   .t-sort__track {
     flex-wrap: nowrap;
-    justify-content: flex-start;
-    width: max-content;
-    min-width: 100%;
-    padding-left: 4vw;
-    padding-right: 4vw;
+    justify-content: center;
+    width: 100%;
+    min-width: 0;
+    gap: 0.75rem;
+    padding-left: 3vw;
+    padding-right: 3vw;
+  }
+  .frame[data-screen="konbini"] .view[data-kview="tickets-all"] .t-sort__btn {
+    letter-spacing: 0.06em;
+    font-size: 12px;
   }
 
-  /* tracker */
+  /* tracker — see stats sits behind the hands, actions share one row */
   .k-stats {
-    left: 5vw;
-    top: auto;
-    bottom: 10vh;
-    transform: none;
+    left: 4vw;
+    right: auto;
+    top: 56%;
+    bottom: auto;
+    width: max-content;
+    max-width: 92vw;
+    transform: translateY(-50%);
+    align-items: flex-start;
     z-index: 0;
-    font-size: clamp(52px, 18vw, 96px);
-    line-height: 0.82;
+    font-size: 40vw;
+    line-height: 0.58;
+    text-align: left;
     text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
   }
   .k-keys { display: none; }
   .k-actions {
     position: absolute;
-    left: auto;
+    left: 4vw;
     right: 4vw;
-    bottom: calc(2.4vh + env(safe-area-inset-bottom));
+    bottom: calc(1.6vh + env(safe-area-inset-bottom));
     z-index: 6;
     display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 0.5rem;
+    flex-direction: row;
+    align-items: stretch;
+    justify-content: space-between;
+    gap: 3vw;
     pointer-events: auto;
   }
   .k-actions button {
+    flex: 1 1 0;
     min-height: 44px;
-    padding: 0.4rem 0.9rem;
+    padding: 0.45rem 0.4rem;
     background: #fff;
     color: #111;
     border: 1px solid #111;
     font-size: 14px;
     font-weight: 700;
     letter-spacing: 0.02em;
-    line-height: 1;
+    line-height: 1.1;
+    text-align: center;
     text-transform: lowercase;
   }
   .frame[data-screen="konbini"]:has([data-kview="tracker"].is-on) .side-nav__panel {
@@ -564,44 +691,39 @@
   .j-mark {
     position: absolute;
     z-index: 6;
-    left: 14vw;
-    right: 14vw;
-    bottom: calc(2.6vh + env(safe-area-inset-bottom));
-    height: 22px;
+    top: 18vh;
+    bottom: 18vh;
+    left: auto;
+    right: calc(3.2vw + env(safe-area-inset-right));
+    width: 22px;
+    height: auto;
     display: block;
     pointer-events: none;
     overflow: hidden;
   }
   .j-mark__dash {
     position: absolute;
-    top: 50%;
-    left: 0;
-    width: 22%;
-    height: 3px;
-    margin-top: -1.5px;
+    top: 0;
+    left: 50%;
+    width: 3px;
+    height: 22%;
+    margin: 0;
     background: var(--red);
     border-radius: 99px;
-    transform-origin: left center;
+    transform-origin: center top;
   }
 }
 
 @media (max-width: 820px) and (hover: none) {
   .j-card:active .j-card__label,
-  .j-card:focus .j-card__label {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
-  }
+  .j-card:focus .j-card__label,
   .j-card--konbini:active .j-card__label,
   .j-card--konbini:focus .j-card__label {
     opacity: 1;
-    transform: translateY(-50%) scale(1);
+    transform: none;
   }
   .j-card--passed:active img,
   .j-card--passed:focus img { opacity: 1; }
-  .j-card--passed:active .j-card__echo--up,
-  .j-card--passed:focus .j-card__echo--up { transform: translateY(-100%); }
-  .j-card--passed:active .j-card__echo--down,
-  .j-card--passed:focus .j-card__echo--down { transform: translateY(100%); }
 }
 
 .back,
