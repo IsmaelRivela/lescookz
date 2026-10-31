@@ -4413,6 +4413,18 @@ function flushHomeDiary(el) {
     const shift = floor - inkBottom - lift;
     if (Math.abs(shift) > 0.25) el.style.transform = `translateY(${Math.round(shift)}px)`;
     else el.style.transform = "";
+
+    const band = document.getElementById("home-diary-band");
+    if (band) {
+      const inkRects = [...target.getClientRects()];
+      const inkBase = inkRects.length
+        ? Math.max(...inkRects.map((r) => r.bottom))
+        : target.getBoundingClientRect().bottom;
+      const overlap = mobile ? 7 : 11;
+      const bandH = Math.max(0, floor - inkBase + overlap);
+      band.style.height = `${Math.round(bandH)}px`;
+      band.hidden = bandH < 2;
+    }
   };
 
   pin();

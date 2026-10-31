@@ -202,6 +202,19 @@ body:has(.frame[data-screen="home"].is-on) #viewport {
   accent-color: var(--red);
   cursor: pointer;
 }
+.home__diary-band {
+  position: fixed;
+  z-index: 4;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 0;
+  background: var(--red);
+  pointer-events: none;
+}
+body:not(:has(.frame[data-screen="home"].is-on)) .home__diary-band {
+  display: none;
+}
 .home__diary {
   position: absolute;
   z-index: 3;
