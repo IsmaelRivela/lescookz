@@ -86,13 +86,16 @@
   .home__metal.is-open .home__metal-toggle { margin-bottom: 0.55rem; }
   .home__diary {
     bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
     align-items: flex-start;
     white-space: normal;
     text-align: left;
     line-height: 0.72;
     box-sizing: border-box;
-    padding-left: 0;
-    padding-right: max(2vw, env(safe-area-inset-right, 0px));
+    padding: 0;
+    margin: 0;
     overflow: visible;
   }
   .home__diary .home__diary-word {
@@ -103,11 +106,8 @@
     letter-spacing: -0.045em;
     line-height: 0.72;
   }
-  .home__diary .home__diary-word--gastro {
-    max-width: 100%;
-  }
   .home__diary .home__diary-word + .home__diary-word {
-    margin-top: -0.078em;
+    margin-top: -0.05em;
   }
   .home__diary .home__diary-word--diary { margin-left: auto; }
   .home__menu { top: 4.8vh; right: 4vw; }

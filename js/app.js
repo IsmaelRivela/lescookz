@@ -4575,13 +4575,10 @@ function fitHomeDiary() {
   }
   const gastro = el.querySelector(".home__diary-word--gastro");
   const track = nhgOn() ? "-0.04em" : "-0.045em";
-  const style = getComputedStyle(el);
-  const padX =
-    (parseFloat(style.paddingLeft) || 0) + (parseFloat(style.paddingRight) || 0);
-  const fitW = Math.max(0, el.clientWidth - padX);
+  const fitW = max;
   gastro.style.letterSpacing = track;
   gastro.style.fontSize = "100px";
-  const width = gastro.getBoundingClientRect().width;
+  const width = gastro.scrollWidth;
   if (!width) {
     flushHomeDiary(el);
     return;
@@ -4595,7 +4592,7 @@ function fitHomeDiary() {
   const shrinkGastro = () => {
     const limit = fitW - 1;
     let guard = 0;
-    while (gastro.getBoundingClientRect().width > limit && size > 8 && guard < 24) {
+    while (gastro.scrollWidth > limit && size > 8 && guard < 24) {
       size *= 0.985;
       words.forEach((word) => {
         word.style.fontSize = `${size}px`;
