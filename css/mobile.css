@@ -86,13 +86,13 @@
   .home__metal.is-open .home__metal-toggle { margin-bottom: 0.55rem; }
   .home__diary {
     bottom: 0;
-    align-items: stretch;
+    align-items: flex-start;
     white-space: normal;
     text-align: left;
     line-height: 0.72;
     box-sizing: border-box;
-    padding-left: max(4vw, env(safe-area-inset-left, 0px));
-    padding-right: max(4vw, env(safe-area-inset-right, 0px));
+    padding-left: 0;
+    padding-right: max(2vw, env(safe-area-inset-right, 0px));
     overflow: visible;
   }
   .home__diary .home__diary-word {
