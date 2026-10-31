@@ -809,6 +809,51 @@ body:has(.frame[data-screen="home"].is-on) .home__diary {
   object-position: left top;
 }
 
+/* Manifest — prueba: lienzo rojo, logo y textos blancos */
+.frame[data-screen="manifest"] {
+  background: var(--red);
+  color: #fff;
+}
+.frame[data-screen="manifest"] .section-title {
+  color: #fff;
+}
+.frame[data-screen="manifest"] .logo {
+  filter: brightness(0) invert(1);
+}
+.frame[data-screen="manifest"] .manifest__copy,
+.frame[data-screen="manifest"] .manifest__copy p,
+.frame[data-screen="manifest"] .manifest__copy em,
+.frame[data-screen="manifest"] .manifest__copy i {
+  color: rgba(255, 255, 255, 0.92);
+}
+.frame[data-screen="manifest"] .manifest__kicker,
+.frame[data-screen="manifest"] .manifest__copy > b:first-child,
+.frame[data-screen="manifest"] .manifest__copy > strong:first-child,
+.frame[data-screen="manifest"] .manifest__copy b,
+.frame[data-screen="manifest"] .manifest__copy strong {
+  color: #fff;
+}
+.frame[data-screen="manifest"] .manifest__copy:empty::before {
+  color: rgba(255, 255, 255, 0.45);
+}
+.frame[data-screen="manifest"] .manifest__tools span {
+  color: #fff;
+}
+
+html[data-type="nhg"] .frame[data-screen="manifest"] .manifest__copy,
+html[data-type="nhg"] .frame[data-screen="manifest"] .manifest__copy p,
+html[data-type="nhg"] .frame[data-screen="manifest"] .manifest__copy em,
+html[data-type="nhg"] .frame[data-screen="manifest"] .manifest__copy i {
+  color: rgba(255, 255, 255, 0.92);
+}
+html[data-type="nhg"] .frame[data-screen="manifest"] .manifest__copy .manifest__kicker,
+html[data-type="nhg"] .frame[data-screen="manifest"] .manifest__copy > b:first-child,
+html[data-type="nhg"] .frame[data-screen="manifest"] .manifest__copy > strong:first-child,
+html[data-type="nhg"] .frame[data-screen="manifest"] .manifest__copy b,
+html[data-type="nhg"] .frame[data-screen="manifest"] .manifest__copy strong {
+  color: #fff;
+}
+
 /* cookz list */
 .vlist {
   position: absolute;
