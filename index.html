@@ -14,21 +14,26 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <meta name="apple-mobile-web-app-title" content="LesCookz" />
     <link rel="manifest" href="/site.webmanifest" />
+    <link rel="preconnect" href="https://use.typekit.net" crossorigin />
+    <link rel="preconnect" href="https://p.typekit.net" crossorigin />
     <link rel="stylesheet" href="media/font/satoshi.css" />
     <link rel="stylesheet" href="css/main.css" />
     <link rel="stylesheet" href="css/mobile.css" />
     <script>
       if (new URLSearchParams(location.search).get("type") === "satoshi") {
-        document.documentElement.removeAttribute("data-type");
+        document.documentElement.dataset.typeMode = "satoshi";
       } else {
         document.documentElement.dataset.type = "nhg";
-        const kit = document.createElement("link");
-        kit.rel = "stylesheet";
-        kit.href = "https://use.typekit.net/uxt8bvb.css";
-        document.head.appendChild(kit);
       }
     </script>
+    <link rel="stylesheet" href="https://use.typekit.net/uxt8bvb.css" id="typekit-css" />
     <link rel="stylesheet" href="css/type-nhg.css" />
+    <script>
+      if (document.documentElement.dataset.typeMode === "satoshi") {
+        document.documentElement.removeAttribute("data-type");
+        document.getElementById("typekit-css")?.remove();
+      }
+    </script>
     <script type="importmap">
       {
         "imports": {

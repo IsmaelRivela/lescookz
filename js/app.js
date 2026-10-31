@@ -876,6 +876,34 @@ function nhgDisplaySize(size) {
   return nhgOn() ? Math.min(size, 228) : size;
 }
 
+const NHG_FONT_SPECS = [
+  '700 16px "neue-haas-grotesk-display"',
+  '700 16px "neue-haas-grotesk-text"',
+  '400 13px "neue-haas-grotesk-text"',
+];
+
+function whenNhgFontsReady() {
+  if (!nhgOn() || !document.fonts?.load) return Promise.resolve();
+  return Promise.all(
+    NHG_FONT_SPECS.map((spec) => document.fonts.load(spec).catch(() => {})),
+  ).then(() => document.fonts.ready);
+}
+
+function markNhgFontsReady() {
+  if (!nhgOn()) return;
+  whenNhgFontsReady().then(() => {
+    document.documentElement.classList.add("nhg-fonts-ready");
+    scheduleHomeDiaryFit();
+    scheduleCookzRomajiFit();
+  });
+}
+
+function scheduleCookzRomajiFit() {
+  fitCookzRomaji();
+  requestAnimationFrame(fitCookzRomaji);
+  whenNhgFontsReady().then(fitCookzRomaji);
+}
+
 function fitCookzRomaji() {
   const el = document.querySelector("#cookz-romaji");
   const span = el?.querySelector("span");
@@ -907,7 +935,7 @@ function paintCookzMark(venue) {
   span.textContent = venue.venueRomaji || "";
   romaji.hidden = !span.textContent;
   if (!cookzKanjiDrag) applyCookzKanji(kanji, kanjiPlace(venue.id));
-  fitCookzRomaji();
+  scheduleCookzRomajiFit();
 }
 
 function bindCookzKanji() {
@@ -1301,7 +1329,7 @@ function bindCookzFrame() {
 
   window.addEventListener("resize", () => {
     if (!cookzFrameOn && !document.querySelector("#cookz-romaji")?.textContent) return;
-    fitCookzRomaji();
+    scheduleCookzRomajiFit();
     if (!cookzFrameOn) return;
     paintCookz();
   });
@@ -4387,9 +4415,11 @@ function startHomeFlash() {
 }
 
 function scheduleHomeDiaryFit() {
-  fitHomeDiary();
-  requestAnimationFrame(() => fitHomeDiary());
-  document.fonts?.ready?.then(() => fitHomeDiary()).catch(() => {});
+  const run = () => fitHomeDiary();
+  run();
+  requestAnimationFrame(run);
+  document.fonts?.ready?.then(run).catch(() => {});
+  whenNhgFontsReady().then(run);
 }
 
 function flushHomeDiary(el) {
@@ -4451,7 +4481,7 @@ function fitHomeDiary() {
     const max = el.clientWidth;
     if (max) {
       span.style.fontSize = "100px";
-      const width = span.scrollWidth;
+      const width = span.getBoundingClientRect().width;
       if (width) {
         span.style.fontSize = `${nhgDisplaySize((100 * max) / width)}px`;
         if (nhgOn()) span.style.letterSpacing = "-0.04em";
@@ -4477,7 +4507,7 @@ function fitHomeDiary() {
   const track = nhgOn() ? "-0.04em" : "-0.045em";
   gastro.style.letterSpacing = track;
   gastro.style.fontSize = "100px";
-  const width = gastro.scrollWidth;
+  const width = gastro.getBoundingClientRect().width;
   if (!width) {
     flushHomeDiary(el);
     return;
@@ -4523,7 +4553,10 @@ function bindHomeMenu() {
     document.querySelectorAll(".home__flash").forEach(placeHomeFace);
   });
   window.visualViewport?.addEventListener("resize", scheduleHomeDiaryFit);
-  document.fonts?.addEventListener("loadingdone", scheduleHomeDiaryFit);
+  document.fonts?.addEventListener("loadingdone", () => {
+    scheduleHomeDiaryFit();
+    scheduleCookzRomajiFit();
+  });
   window.setTimeout(scheduleHomeDiaryFit, 400);
   window.setTimeout(scheduleHomeDiaryFit, 1200);
 }
@@ -4844,6 +4877,7 @@ function init() {
   bindFavosFilm();
   bindTicketRain();
   bindHomeMenu();
+  markNhgFontsReady();
   bindSiteTreePlace();
   const snackActions = document.querySelector(".k-actions");
   const syncSnackActions = () => {

@@ -185,3 +185,47 @@ html[data-type="nhg"] .manifest__copy strong {
   color: var(--nhg-title);
   text-transform: uppercase;
 }
+
+/* NHG desktop sizes above — on phone follow mobile.css rhythm. */
+@media (max-width: 820px) {
+  html[data-type="nhg"] .section-title {
+    font-size: clamp(30px, 8.4vw, 51px);
+    line-height: 1;
+  }
+
+  html[data-type="nhg"] .home__explore {
+    font-size: clamp(36px, 9vw, 56px);
+    letter-spacing: -0.045em;
+  }
+
+  html[data-type="nhg"] .lang-gate button {
+    font-size: clamp(32px, 6vw, 56px);
+    letter-spacing: -0.03em;
+    text-transform: none;
+  }
+
+  html[data-type="nhg"] .j-card__label,
+  html[data-type="nhg"] .k-menu a {
+    font-size: 18px;
+    letter-spacing: 0.04em;
+    line-height: 1.1;
+    text-transform: lowercase;
+  }
+
+  html[data-type="nhg"] .j-card--konbini .j-card__label {
+    font-size: 18px;
+    line-height: 1.1;
+    letter-spacing: 0.04em;
+  }
+
+  html[data-type="nhg"] .k-menu a {
+    font-size: clamp(28px, 9vw, 40px);
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+  }
+
+  html[data-type="nhg"] .home__menu button {
+    font-size: 20px;
+    letter-spacing: -0.02em;
+  }
+}
