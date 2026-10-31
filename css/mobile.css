@@ -39,6 +39,10 @@
     width: 56px;
     height: 46px;
   }
+  .back--cookz {
+    width: auto;
+    height: auto;
+  }
   .back img { width: 56px; }
   .back--right { right: 4vw; bottom: 2vh; }
   .back--left { left: 4vw; bottom: 2vh; }
@@ -302,13 +306,30 @@
     text-align: left;
     text-justify: auto;
   }
+  .frame[data-screen="cookz"].is-case-zoom {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .frame[data-screen="cookz"].is-case-zoom .cookz-shell {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
   .frame[data-screen="cookz"].is-case-zoom .back--cookz {
-    position: fixed;
-    left: 4vw;
+    position: sticky;
+    flex: 0 0 auto;
+    align-self: flex-start;
+    left: auto;
     right: auto;
     top: auto;
     bottom: calc(2.2vh + env(safe-area-inset-bottom));
+    margin: 0 0 calc(2.2vh + env(safe-area-inset-bottom)) 4vw;
     z-index: 30;
+    width: auto;
+    height: auto;
     font-size: 20px;
   }
 
@@ -731,6 +752,12 @@
 .page-peel,
 .page-peel.is-on {
   display: none;
+}
+
+@media (max-width: 820px) {
+  .frame[data-screen="cookz"].is-case-zoom .back--cookz {
+    display: block;
+  }
 }
 
 .lang-gate {
