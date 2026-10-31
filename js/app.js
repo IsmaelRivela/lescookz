@@ -917,6 +917,21 @@ function nhgDisplaySize(size) {
   return Math.min(size, cap);
 }
 
+/** Tope alto solo para el titular home móvil (gastronomic a ancho completo). */
+function nhgHomeDiarySize(size) {
+  if (!nhgOn()) return size;
+  const w = window.innerWidth || document.documentElement.clientWidth || 390;
+  const cap = Math.min(220, Math.max(96, w * 0.19));
+  return Math.min(size, cap);
+}
+
+function homeDiaryFitWidth(el) {
+  const rect = el.getBoundingClientRect();
+  return Math.round(
+    rect.width || el.clientWidth || document.documentElement.clientWidth || window.innerWidth,
+  );
+}
+
 const NHG_FONT_SPECS = [
   '700 16px "neue-haas-grotesk-display"',
   '700 16px "neue-haas-grotesk-text"',
@@ -4531,6 +4546,90 @@ function flushHomeDiary(el) {
   requestAnimationFrame(pin);
 }
 
+function fitWordTrackToWidth(word, targetWidth, opts = {}) {
+  if (!word || !Number.isFinite(targetWidth) || targetWidth < 1) return;
+  const lo = opts.minTrack ?? -0.06;
+  const hi = opts.maxTrack ?? 0.85;
+  const natural = word.scrollWidth;
+  if (!natural) return;
+  if (natural >= targetWidth - 0.5) {
+    if (natural <= targetWidth + 0.5) return;
+    let tLo = lo;
+    let tHi = 0;
+    for (let i = 0; i < 14; i += 1) {
+      const mid = (tLo + tHi) / 2;
+      word.style.letterSpacing = `${mid}em`;
+      if (word.scrollWidth > targetWidth) tLo = mid;
+      else tHi = mid;
+    }
+    word.style.letterSpacing = `${tLo}em`;
+    return;
+  }
+  let tLo = lo;
+  let tHi = hi;
+  for (let i = 0; i < 16; i += 1) {
+    const mid = (tLo + tHi) / 2;
+    word.style.letterSpacing = `${mid}em`;
+    if (word.scrollWidth > targetWidth) tHi = mid;
+    else tLo = mid;
+  }
+  word.style.letterSpacing = `${tLo}em`;
+}
+
+const HOME_DIARY_REF_PX = 100;
+
+/**
+ * Móvil: tamaño común de visual / gastronomic / diary.
+ * «gastronomic» manda: debe ir de margen a margen; el resto usa el mismo px.
+ */
+function homeDiarySizeFromGastroMargins(el, words) {
+  const gastro = el.querySelector(".home__diary-word--gastro");
+  const visual = el.querySelector(".home__diary-word--visual");
+  const fitW = homeDiaryFitWidth(el);
+  if (!gastro || !fitW) return false;
+
+  const baseTrack = nhgOn() ? "-0.04em" : "-0.045em";
+  const gastroTrack = { minTrack: -0.06, maxTrack: 0.38 };
+  gastro.style.fontSize = `${HOME_DIARY_REF_PX}px`;
+  gastro.style.letterSpacing = baseTrack;
+  const refW = gastro.scrollWidth;
+  if (!refW) return false;
+
+  let size = nhgHomeDiarySize((HOME_DIARY_REF_PX * fitW) / refW);
+  const applySize = () => {
+    words.forEach((word) => {
+      word.style.fontSize = `${size}px`;
+      word.style.letterSpacing = baseTrack;
+    });
+  };
+  applySize();
+
+  for (let guard = 0; guard < 36; guard += 1) {
+    fitWordTrackToWidth(gastro, fitW, gastroTrack);
+    const w = gastro.scrollWidth;
+    if (w >= fitW - 1 && w <= fitW + 0.5) break;
+    if (w > fitW + 0.5 && size > 10) {
+      size *= 0.988;
+      applySize();
+      continue;
+    }
+    if (w < fitW - 1) {
+      const next = nhgHomeDiarySize(size * 1.014);
+      if (next <= size + 0.01) break;
+      size = next;
+      applySize();
+      continue;
+    }
+    break;
+  }
+  fitWordTrackToWidth(gastro, fitW, gastroTrack);
+
+  if (visual) {
+    fitWordTrackToWidth(visual, fitW / 2, { minTrack: -0.045, maxTrack: 0.8 });
+  }
+  return true;
+}
+
 function fitHomeDiary() {
   const el = document.querySelector(".home__diary");
   const span = el?.querySelector(".home__diary-full");
@@ -4573,48 +4672,13 @@ function fitHomeDiary() {
     flushHomeDiary(el);
     return;
   }
-  const gastro = el.querySelector(".home__diary-word--gastro");
-  const track = nhgOn() ? "-0.04em" : "-0.045em";
-  const fitW = max;
-  gastro.style.letterSpacing = track;
-  gastro.style.fontSize = "100px";
-  const width = gastro.scrollWidth;
-  if (!width) {
+  words.forEach((word) => {
+    word.style.letterSpacing = "";
+  });
+  if (!homeDiarySizeFromGastroMargins(el, words)) {
     flushHomeDiary(el);
     return;
   }
-  let size = nhgDisplaySize((100 * fitW) / width);
-  const half = fitW / 2;
-  words.forEach((word) => {
-    word.style.fontSize = `${size}px`;
-    word.style.letterSpacing = track;
-  });
-  const shrinkGastro = () => {
-    const limit = fitW - 1;
-    let guard = 0;
-    while (gastro.scrollWidth > limit && size > 8 && guard < 24) {
-      size *= 0.985;
-      words.forEach((word) => {
-        word.style.fontSize = `${size}px`;
-      });
-      guard += 1;
-    }
-  };
-  shrinkGastro();
-  const trackTo = (word, target) => {
-    const natural = word.scrollWidth;
-    if (!natural || natural >= target - 1) return;
-    let lo = -0.045;
-    let hi = 0.8;
-    for (let i = 0; i < 14; i += 1) {
-      const mid = (lo + hi) / 2;
-      word.style.letterSpacing = `${mid}em`;
-      if (word.scrollWidth > target) hi = mid;
-      else lo = mid;
-    }
-    word.style.letterSpacing = `${lo}em`;
-  };
-  trackTo(el.querySelector(".home__diary-word--visual"), half);
   flushHomeDiary(el);
 }
 
